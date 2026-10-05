@@ -1,0 +1,20 @@
+# Transcriptomics Expression Pipeline Configuration
+pipeline_name: "transcriptomics_standard_v1"
+modality: "transcriptomics"
+
+filters:
+  min_samples_expressed: 0.10
+  min_expression_threshold: 1.0
+  min_variance: 0.05
+
+normalization:
+  apply_cpm_normalization: true
+  target_counts: 1000000.0  # Counts Per Million (CPM)
+  apply_log1p: true          # log2(counts + 1)
+
+imputation:
+  strategy: "zero"
+
+feature_selection:
+  method: "mutual_info"
+  max_features: 50

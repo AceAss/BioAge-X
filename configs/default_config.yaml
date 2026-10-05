@@ -1,0 +1,48 @@
+# BioAge-X Default Platform Configuration
+platform:
+  name: "BioAge-X"
+  version: "0.1.0"
+  description: "Explainable Multi-Omics Biological Age Estimation Platform"
+
+preprocessing:
+  methylation:
+    min_variance: 0.001
+    imputation_strategy: "median"
+    standardize: false
+    filter_cg_only: true
+    max_missing_probe_rate: 0.15
+  transcriptomics:
+    min_variance: 0.01
+    min_expression_threshold: 1.0
+    min_samples_expressed: 0.10
+    apply_cpm_normalization: true
+    apply_log1p: true
+    imputation_strategy: "zero"
+  feature_selection:
+    max_features: 40
+    method: "mutual_info"
+    correlation_threshold: 0.95
+
+models:
+  elasticnet:
+    l1_ratios: [0.1, 0.5, 0.7, 0.9, 0.95]
+    cv: 5
+    max_iter: 2000
+  random_forest:
+    n_estimators: 150
+    max_depth: 8
+    min_samples_split: 4
+  xgboost:
+    n_estimators: 150
+    learning_rate: 0.05
+    max_depth: 4
+    subsample: 0.85
+
+gnn:
+  architecture: "GCN"
+  epochs: 50
+  lr: 0.01
+  hidden_dim: 32
+
+explainability:
+  top_k_biomarkers: 20

@@ -1,0 +1,118 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { PathwayEnrichment } from "@/lib/types";
+import { formatPValue } from "@/lib/utils";
+import { GitBranch, Sparkles, Filter, CheckCircle2, ArrowRight } from "lucide-react";
+
+export default function PathwaysPage() {
+  const [pathways, setPathways] = useState<PathwayEnrichment[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  useEffect(() => {
+    loadPathways();
+  }, []);
+
+  async function loadPathways() {
+    try {
+      const data = await api.enrichPathways();
+      setPathways(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const categories = Array.from(new Set(pathways.map((p) => p.category)));
+
+  const filteredPathways = pathways.filter(
+    (p) => selectedCategory === "all" || p.category === selectedCategory
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div>
+          <h1 className="text-2xl font-black text-white">Functional Aging Pathway Enrichment (ORA)</h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Over-representation analysis mapping identified biomarkers to canonical hallmarks of aging with Benjamini-Hochberg FDR.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="h-9 rounded-xl border border-slate-800 bg-slate-900 px-3 text-xs text-slate-300 focus:outline-none"
+          >
+            <option value="all">All Hallmark Categories</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Pathway Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredPathways.map((pw) => (
+          <div
+            key={pw.pathway_id}
+            className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 backdrop-blur-md space-y-3 hover:border-slate-700 transition-all"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-teal-400 font-semibold">
+                  {pw.category}
+                </span>
+                <h3 className="text-sm font-bold text-white mt-0.5">{pw.pathway_name}</h3>
+              </div>
+              <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-300">
+                Score: {pw.enrichment_score}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">{pw.description}</p>
+
+            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800/80 text-[11px] font-mono">
+              <div>
+                <span className="text-slate-500 block text-[10px]">Overlap</span>
+                <span className="text-slate-200 font-bold">
+                  {pw.overlap_count} / {pw.pathway_size}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[10px]">P-Value</span>
+                <span className="text-teal-400 font-bold">{formatPValue(pw.p_value)}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[10px]">Adj. FDR</span>
+                <span className="text-cyan-400 font-bold">{formatPValue(pw.fdr_adjusted_p)}</span>
+              </div>
+            </div>
+
+            {/* Overlapping Genes */}
+            <div className="pt-2">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold block mb-1.5">
+                Overlapping Biomarkers:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {pw.overlapping_genes.map((gene) => (
+                  <span
+                    key={gene}
+                    className="rounded bg-slate-800/80 px-2 py-0.5 text-[11px] font-mono text-cyan-300 border border-slate-700/60"
+                  >
+                    {gene}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

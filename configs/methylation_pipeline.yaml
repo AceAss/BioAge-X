@@ -1,0 +1,21 @@
+# DNA Methylation Preprocessing Pipeline Configuration
+pipeline_name: "methylation_standard_v1"
+modality: "methylation"
+
+filters:
+  filter_cg_only: true
+  max_missing_sample_rate: 0.20
+  max_missing_probe_rate: 0.10
+  min_variance: 0.002
+
+imputation:
+  strategy: "median"  # options: median, mean, zero
+
+transformations:
+  convert_to_m_values: false
+  standardize: false
+
+feature_selection:
+  method: "mutual_info"
+  max_features: 50
+  correlation_threshold: 0.95
