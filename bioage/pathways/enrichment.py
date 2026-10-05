@@ -73,7 +73,11 @@ class PathwayEnrichmentAnalyzer:
                     [N - k, max(1, M - N - (n - k))]
                 ]
                 res = stats.fisher_exact(table)
-                odds_ratio = float(res.statistic)
+                raw_stat = float(res.statistic)
+                if np.isinf(raw_stat) or np.isnan(raw_stat):
+                    odds_ratio = 999.0
+                else:
+                    odds_ratio = round(raw_stat, 2)
 
             raw_p_values.append(p_val)
             results.append({
@@ -85,7 +89,7 @@ class PathwayEnrichmentAnalyzer:
                 "overlap_count": k,
                 "overlapping_genes": sorted(list(overlap)),
                 "p_value": p_val,
-                "odds_ratio": round(odds_ratio, 2),
+                "odds_ratio": odds_ratio,
             })
 
         # Benjamini-Hochberg FDR correction

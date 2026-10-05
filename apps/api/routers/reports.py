@@ -72,8 +72,47 @@ def generate_report(request: ReportGenerateRequest, db: Session = Depends(get_db
     bio_graph.build_from_biomarkers(query_genes, edge_list_path=edge_path)
     cyto_export = bio_graph.to_cytoscape_json()
 
-    # 5. Build Report
+    # 5. Reference Clock Benchmarks
+    from bioage.benchmarks.clocks import ReferenceClockBenchmarkSuite
+    ref_suite = ReferenceClockBenchmarkSuite()
+    benchmarks_data = [r.to_dict() for r in ref_suite.evaluate_all(df, age_col=age_col)]
+
+    # 6. Record Biological Knowledge Provenance for this Experiment
     exp_id = f"EXP-{uuid.uuid4().hex[:8].upper()}"
+    from bioage.integrations.provenance import get_provenance_tracker
+    from bioage.integrations.base import KnowledgeStatus
+
+    prov_tracker = get_provenance_tracker()
+    prov_tracker.record(
+        experiment_id=exp_id,
+        provider="Ensembl",
+        query_type="identifier_resolution",
+        status=KnowledgeStatus.LIVE if any(b.get("ensembl_gene_id") for b in top_biomarkers) else KnowledgeStatus.LOCAL_FALLBACK,
+        records_count=len(top_biomarkers),
+        provider_version="GRCh38 / Ensembl 113",
+        request_summary={"biomarkers": [b.get("gene_symbol") for b in top_biomarkers]},
+    )
+    prov_tracker.record(
+        experiment_id=exp_id,
+        provider="STRING",
+        query_type="ppi_network",
+        status=KnowledgeStatus(cyto_export["summary"].get("knowledge_status", "LOCAL_FALLBACK")),
+        records_count=cyto_export["summary"].get("n_edges", 0),
+        provider_version="v12.0",
+        request_summary={"network_source": cyto_export["summary"].get("network_source", "hybrid"), "seeds": len(query_genes)},
+    )
+    prov_tracker.record(
+        experiment_id=exp_id,
+        provider="Reactome / Hallmark",
+        query_type="pathway_enrichment",
+        status=KnowledgeStatus.LOCAL_FALLBACK,
+        records_count=len(pathway_results),
+        provider_version="Release 91 & Curated Hallmarks",
+        request_summary={"pathway_count": len(pathway_results)},
+    )
+    prov_summary = prov_tracker.get_summary(exp_id)
+
+    # 7. Build Report
     reporter = ResearchReportGenerator()
     profile_data = json.loads(dataset.profile_json) if dataset.profile_json else {}
 
@@ -99,6 +138,8 @@ def generate_report(request: ReportGenerateRequest, db: Session = Depends(get_db
         top_biomarkers=top_biomarkers,
         pathway_enrichments=pathway_results,
         network_summary=cyto_export["summary"],
+        benchmarks_summary=benchmarks_data,
+        external_knowledge_provenance=prov_summary,
     )
 
     # 6. PDF Export

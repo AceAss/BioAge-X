@@ -80,43 +80,123 @@ export default function DatasetsPage() {
     }
   }
 
+  async function handleLoadPublic(key: string) {
+    setIsLoadingDemo(true);
+    setUploadError(null);
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/datasets/public/load/${key}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const errJson = await res.json();
+        throw new Error(errJson.detail || "Failed to load public benchmark.");
+      }
+      const pubDs = await res.json();
+      setDatasets((prev) => [pubDs, ...prev.filter((d) => d.id !== pubDs.id)]);
+      selectDataset(pubDs);
+    } catch (err: any) {
+      setUploadError(err.message || "Failed to load public benchmark.");
+    } finally {
+      setIsLoadingDemo(false);
+    }
+  }
+
   const profile = datasetDetails?.profile || selectedDataset?.profile;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <h1 className="text-2xl font-black text-white">Multi-Omics Dataset Ingestion & Profiling</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded-full">
+              Data Ingestion Layer
+            </span>
+            <span className="text-xs text-slate-500">Three Entry Pathways</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white mt-1">Multi-Omics Dataset Ingestion & Profiling</h1>
+          <p className="text-xs text-slate-400 mt-0.5">
             Validate matrix orientations, detect chronological age, profile missingness, and inspect omics covariates.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".csv,.tsv,.txt,.parquet,.h5ad"
-            className="hidden"
-          />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".csv,.tsv,.txt,.parquet,.h5ad"
+          className="hidden"
+        />
+      </div>
+
+      {/* 3 Entry Pathways Banner (TASK 16) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        {/* OPTION A: DEMO */}
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 shadow-md backdrop-blur-md flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
+                Option A — Demo Cohort
+              </span>
+              <Sparkles className="h-4 w-4 text-teal-400" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-100 mt-2">Synthetic Multi-Omics Cohort</h3>
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              150 samples with simulated DNA methylation, transcriptomics, and clinical covariates (ELOVL2, CDKN2A, SIRT1, IL6, BMI, smoking).
+            </p>
+          </div>
+          <button
+            onClick={() => handleLoadPublic("demo_multiomics")}
+            disabled={isLoadingDemo}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg border border-teal-500/40 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 font-semibold px-3 py-1.5 text-xs transition-colors disabled:opacity-50"
+          >
+            <span>{isLoadingDemo ? "Loading..." : "Load Demo Cohort"}</span>
+          </button>
+        </div>
+
+        {/* OPTION B: PUBLIC BENCHMARK */}
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 shadow-md backdrop-blur-md flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                Option B — Public Dataset
+              </span>
+              <Database className="h-4 w-4 text-purple-400" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-100 mt-2">GSE40279 Hannum Blood Benchmark</h3>
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Curated Illumina 450K whole-blood methylation cohort featuring all 71 Hannum clock CpGs, canonical Horvath loci, and chronological age.
+            </p>
+          </div>
+          <button
+            onClick={() => handleLoadPublic("gse40279_hannum")}
+            disabled={isLoadingDemo}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 font-semibold px-3 py-1.5 text-xs transition-colors disabled:opacity-50"
+          >
+            <span>{isLoadingDemo ? "Loading..." : "Load GSE40279 Benchmark"}</span>
+          </button>
+        </div>
+
+        {/* OPTION C: USER CUSTOM DATASET */}
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 shadow-md backdrop-blur-md flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                Option C — Custom Dataset
+              </span>
+              <Upload className="h-4 w-4 text-cyan-400" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-100 mt-2">Upload User Omics Matrix</h3>
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Inspect dimensions, infer sample/feature orientation, detect missingness, and profile numeric and clinical columns.
+            </p>
+          </div>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex items-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 text-xs transition-colors shadow-glow disabled:opacity-50"
+            className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 text-xs transition-colors shadow-sm disabled:opacity-50"
           >
-            <Upload className="h-4 w-4" />
-            {isUploading ? "Profiling File..." : "Upload Matrix"}
-          </button>
-
-          <button
-            onClick={handleLoadDemo}
-            disabled={isLoadingDemo}
-            className="flex items-center gap-2 rounded-xl border border-teal-500/40 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 font-semibold px-4 py-2 text-xs transition-colors disabled:opacity-50"
-          >
-            <Sparkles className="h-4 w-4 text-teal-400" />
-            {isLoadingDemo ? "Loading Demo..." : "Load Synthetic Demo"}
+            <span>{isUploading ? "Profiling File..." : "Upload Matrix File (CSV/TSV/H5AD)"}</span>
           </button>
         </div>
       </div>

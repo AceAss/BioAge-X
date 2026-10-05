@@ -40,6 +40,14 @@ class BioAgeGraphDataset:
         self.test_mask = test_mask
         self.feature_names = feature_names
 
+    @property
+    def num_nodes(self) -> int:
+        return self.x.shape[0]
+
+    @property
+    def num_edges(self) -> int:
+        return self.edge_index.shape[1]
+
     @classmethod
     def from_interaction_graph(
         self,

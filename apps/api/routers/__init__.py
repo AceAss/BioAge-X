@@ -9,11 +9,14 @@ from apps.api.routers.pathways import router as pathways_router
 from apps.api.routers.reports import router as reports_router
 from apps.api.routers.experiments import router as experiments_router
 from apps.api.routers.health import router as health_router
+from apps.api.routers.benchmarks import router as benchmarks_router
+from apps.api.routers.integrations import router as integrations_router
 
 __all__ = [
     "datasets_router",
     "analyses_router",
     "models_router",
+    "benchmarks_router",
     "explainability_router",
     "network_router",
     "gnn_router",
@@ -21,4 +24,6 @@ __all__ = [
     "reports_router",
     "experiments_router",
     "health_router",
+    "integrations_router",
 ]
+

@@ -103,6 +103,9 @@ class NetworkBuildRequest(BaseModel):
     biomarkers: List[str] = []
     include_pathways: bool = True
     edge_list_name: Optional[str] = None
+    network_source: str = "hybrid"  # "hybrid", "string", "local"
+    min_confidence: float = 0.400
+    species: int = 9606
 
 
 class NetworkResponseSchema(BaseModel):
@@ -130,11 +133,63 @@ class GNNResponseSchema(BaseModel):
 class PathwayEnrichmentRequest(BaseModel):
     query_genes: List[str] = []
     fdr_threshold: float = 0.10
+    pathway_source: str = "reactome"  # "reactome", "hallmarks", "combined"
+    species: str = "homo_sapiens"
 
 
 class PathwayEnrichmentResponse(BaseModel):
     pathways: List[Dict[str, Any]]
     query_gene_count: int
+    source_attribution: str = "Reactome Analysis Service & Hallmark Knowledge Base"
+
+
+# =============================================================================
+# INTEGRATIONS SCHEMAS
+# =============================================================================
+
+class ResolveGenesRequest(BaseModel):
+    identifiers: List[str]
+    species: str = "homo_sapiens"
+
+
+class ResolveGenesResponse(BaseModel):
+    resolved: List[Dict[str, Any]]
+    total_count: int
+    ambiguous_count: int
+    provenance_summary: Dict[str, Any] = {}
+
+
+class StringNetworkRequest(BaseModel):
+    genes: List[str]
+    min_score: float = 0.400
+    species: int = 9606
+    network_source: str = "hybrid"  # "hybrid", "string", "local"
+
+
+class ReactomePathwaysRequest(BaseModel):
+    genes: List[str]
+    species: str = "homo_sapiens"
+    fdr_threshold: float = 0.10
+    pathway_source: str = "reactome"  # "reactome", "hallmarks", "combined"
+
+
+class EnsemblAnnotateRequest(BaseModel):
+    symbols: List[str]
+    species: str = "homo_sapiens"
+
+
+class GeoImportRequest(BaseModel):
+    accession: str
+
+
+class IntegrationsHealthResponse(BaseModel):
+    string: str
+    reactome: str
+    ensembl: str
+    ncbi: str
+    details: Dict[str, Any]
+    cache: Dict[str, Any]
+
 
 
 class ReportGenerateRequest(BaseModel):

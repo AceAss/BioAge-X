@@ -32,7 +32,12 @@ class GraphTrainer:
         dataset: BioAgeGraphDataset,
         lr: float = 0.01,
         weight_decay: float = 5e-4,
+        random_seed: Optional[int] = None,
     ):
+        if random_seed is not None:
+            torch.manual_seed(random_seed)
+            np.random.seed(random_seed)
+
         self.model = model
         self.dataset = dataset
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)

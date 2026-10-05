@@ -103,11 +103,11 @@ class BioAgeShapExplainer:
 
             pred_deltas = (preds - self.base_value_).reshape(-1, 1)
             raw_contribs = z_scores * imp_norm
-            row_sums = np.sum(np.abs(raw_contribs), axis=1, keepdims=True)
-            row_sums[row_sums == 0] = 1.0
-
-            # Scale so sum(phi_i) exactly equals prediction - base_value
-            self.shap_values_ = (raw_contribs / row_sums) * pred_deltas
+            row_sums = np.sum(raw_contribs, axis=1, keepdims=True)
+            # Handle near-zero row sums safely to preserve exact efficiency
+            safe_sums = np.where(np.abs(row_sums) > 1e-7, row_sums, 1.0)
+            # Scale so sum(phi_i) + base_value exactly equals prediction
+            self.shap_values_ = (raw_contribs / safe_sums) * pred_deltas
 
     def get_global_importance(self, top_k: int = 20) -> List[Dict[str, Any]]:
         """Returns top biomarkers ranked by mean absolute SHAP value."""

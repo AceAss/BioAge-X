@@ -79,3 +79,56 @@ def test_gnn_train():
     data = res.json()
     assert "test_mse" in data
     assert len(data["top_predicted_nodes"]) > 0
+
+
+def test_integrations_endpoints():
+    # 1. Health
+    h_res = client.get("/api/v1/integrations/health")
+    assert h_res.status_code == 200
+    h_data = h_res.json()
+    assert "string" in h_data
+    assert "reactome" in h_data
+    assert "ensembl" in h_data
+    assert "ncbi" in h_data
+
+    # 2. Genes resolve
+    res_genes = client.post(
+        "/api/v1/integrations/genes/resolve",
+        json={"identifiers": ["cg16867657", "CDKN2A", "smoking_status"]},
+    )
+    assert res_genes.status_code == 200
+    rg_data = res_genes.json()
+    assert rg_data["total_count"] == 3
+    # Check ELOVL2 mapping for cg16867657
+    assert any(item["canonical_symbol"] == "ELOVL2" for item in rg_data["resolved"])
+
+    # 3. STRING network
+    str_res = client.post(
+        "/api/v1/integrations/string/network",
+        json={"genes": ["TP53", "CDKN1A"], "network_source": "local"},
+    )
+    assert str_res.status_code == 200
+    assert str_res.json()["total_edges"] > 0
+
+    # 4. Reactome pathways
+    pw_res = client.post(
+        "/api/v1/integrations/reactome/pathways",
+        json={"genes": ["TP53", "CDKN2A"], "pathway_source": "hallmarks"},
+    )
+    assert pw_res.status_code == 200
+    assert len(pw_res.json()["pathways"]) > 0
+
+    # 5. GEO Search & Metadata preview
+    geo_res = client.get("/api/v1/integrations/geo/search?query=GSE40279")
+    assert geo_res.status_code == 200
+    assert geo_res.json()["count"] > 0
+
+    meta_res = client.get("/api/v1/integrations/geo/GSE40279")
+    assert meta_res.status_code == 200
+    assert meta_res.json()["sample_count"] == 656
+
+    # 6. Cache stats
+    c_res = client.get("/api/v1/integrations/cache/stats")
+    assert c_res.status_code == 200
+    assert "total_records" in c_res.json()
+

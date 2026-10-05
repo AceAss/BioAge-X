@@ -1,9 +1,9 @@
-# BioAge-X 🧬⏱️
+﻿# BioAge-X ðŸ§¬â±ï¸
 
 > **"From molecular signals to biological age."**  
 > An explainable multi-omics computational platform that estimates biological age from molecular data and investigates the molecular mechanisms associated with accelerated or decelerated aging.
 
-[![CI](https://github.com/bioage-x/bioage-x/actions/workflows/ci.yml/badge.svg)](https://github.com/bioage-x/bioage-x/actions)
+[![CI](https://github.com/AceAss/BioAge-X/actions/workflows/ci.yml/badge.svg)](https://github.com/AceAss/BioAge-X/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-teal.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black)](https://nextjs.org/)
@@ -12,89 +12,144 @@
 
 ---
 
-## ⚠️ Important Scientific & Educational Disclaimer
+## âš ï¸ Important Scientific & Educational Disclaimer
 
 **BioAge-X is strictly an educational and academic computational biology research platform.**  
 It is **NOT a clinical diagnostic system or medical device**. Biological age acceleration estimates reflect mathematical residuals under specific statistical assumptions and do not constitute clinical diagnosis, personalized disease prognosis, or health advice.
 
 ---
 
-## 🌟 Key Capabilities
+---
 
+## ðŸ”¬ The Two-Phase Research Framework
+
+BioAge-X is structured around a rigorous, two-phase computational biology framework:
+
+```
+          MOLECULAR DATA
+                â†“
+        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+        â”‚    PHASE 1    â”‚
+        â”‚    BIOAGE     â”‚
+        â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                â†“
+      Biological Age Estimate
+                â†“
+        Age Acceleration
+                â†“
+      Clock Benchmarking (Horvath / Hannum / PhenoAge)
+                â†“
+              SHAP
+                â†“
+      Candidate Biomarkers
+                â†“
+        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+        â”‚    PHASE 2    â”‚
+        â”‚ GRAPHOMICS-AI â”‚
+        â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
+                â†“
+      Gene / Protein Mapping
+                â†“
+       Biological Network
+                â†“
+      Pathway Association
+                â†“
+              GNN
+                â†“
+      Aging Network Signals
+```
+
+### Phase 1: Multi-Omics Biological Age Prediction & Benchmarking
 1. **Multi-Omics Ingestion & Profiling**:
    - Ingests CSV, TSV, Parquet, and H5AD (AnnData) matrices.
    - Automatic orientation inference (`samples_by_features` vs `features_by_samples`).
    - Automated detection of chronological age, sample IDs, duplicate loci, and missingness.
-2. **Modality-Specific Preprocessing**:
-   - **DNA Methylation**: Beta range verification $[0, 1]$, missingness filter, variance thresholding, CpG whitelist filtering.
-   - **Transcriptomics**: Library-size CPM normalization, log1p transformation $\log_2(x + 1)$, variance filtering.
-3. **Supervised Feature Selection**:
-   - Mutual Information regression against chronological age.
-   - Collinearity pruning ($r > 0.95$).
-   - Full provenance tracking from raw probe to model weight.
-4. **Predictive Biological Age Models**:
-   - **ElasticNet** regularized linear regression (Horvath / Hannum epigenetic clock paradigm).
-   - **Random Forest** and **XGBoost** tree ensembles capturing non-linear epistasis.
-   - **Multi-Omics Fusion**: Early feature concatenation, Late stacking meta-regression, and Weighted ensemble.
-5. **Age Acceleration Analysis**:
-   - Sample-level residual calculation: $\text{Age Acceleration} = \text{Predicted Bio Age} - \text{Chronological Age}$.
-   - Cohort-level stratification (Accelerated, Decelerated, Synchronous).
-6. **SHAP Explainability**:
-   - Global biomarker ranking by mean absolute SHAP value ($|\phi_i|$).
-   - Sample-level beeswarm distributions and individual local waterfall decompositions.
-7. **Biological Interaction Networks**:
-   - Heterogeneous interactome graph with NetworkX (Gene, Protein, Pathway, Biological Process).
-   - Degree centrality, betweenness centrality, PageRank, and Louvain community detection.
-   - Full export to interactive Cytoscape.js browser visualization.
-8. **Graph Neural Networks (GNNs)**:
-   - PyTorch-based GCN, GraphSAGE, and GAT for node-level aging score regression.
-9. **Pathway Over-Representation Analysis (ORA)**:
-   - Hypergeometric test against curated hallmarks of aging (Senescence, Telomeres, Epigenetics, mTOR, Mitochondria, Inflammaging) with Benjamini-Hochberg FDR correction.
-10. **Automated Research Reporting**:
-    - Generates downloadable, publication-grade scientific PDF reports and machine-readable JSON summaries with reproducibility fingerprints.
+2. **Modality Preprocessing & Feature Selection**:
+   - **DNA Methylation**: Beta range $[0, 1]$ QC, missingness filtering, variance thresholding.
+   - **Transcriptomics**: Library-size CPM normalization, $\log_2(\text{CPM} + 1)$ variance-stabilizing transformation.
+   - **Supervised Selection**: Mutual Information regression against chronological age and collinearity pruning ($r > 0.95$).
+3. **BioAge-X Predictive Modeling**:
+   - **ElasticNet** regularized linear regression.
+   - **Random Forest** and **XGBoost** tree ensembles capturing non-linear interactions.
+   - **Multi-Omics Fusion**: Early feature concatenation, Late stacking meta-regression, and inverse-MAE Weighted Ensemble.
+4. **Epigenetic Clock Benchmarking (`/benchmarks`)**:
+   - Benchmarks models against canonical biological clocks:
+     - **Horvath Pan-Tissue Clock (2013)** (353 CpGs, non-linear anti-log age transformation).
+     - **Hannum Whole Blood Clock (2013)** (71 CpGs linear scoring with age intercept).
+     - **Levine PhenoAge (2018)** (513 CpGs mortality-associated surrogate biomarkers).
+   - **Zero Fabrication Guarantee**: Detects probe coverage; if features are missing, reports unavailability honestly without fabricating data.
+5. **Age Acceleration Residuals**:
+   - Residual calculation: $\text{Age Acceleration} = \text{Predicted Bio Age} - \text{Chronological Age}$.
+   - Cohort stratification into Accelerated ($\Delta > +1.0$ yr), Decelerated ($\Delta < -1.0$ yr), and Synchronous aging.
+6. **SHAP Explainability & Biomarker Bridge**:
+   - Exact polynomial and analytical SHAP decomposition.
+   - **Biomarker-to-Biology Bridge**: Transforms top predictive features into prioritized **Candidate Aging-Associated Features** mapped to target genes, UniProt proteins, and chromosomes.
+
+### Phase 2: GraphOmics-AI Network Biology & GNNs
+1. **Biological Interaction Networks**:
+   - Heterogeneous interactome graph with NetworkX (Gene, Protein, Pathway).
+   - Topological metrics: Degree centrality, betweenness centrality, PageRank, and Louvain community detection.
+   - Interactive Cytoscape.js canvas with node inspection and cluster filtering.
+2. **Top Aging Network Nodes**:
+   - Ranked topological identification of hub genes and bottleneck regulators.
+3. **Functional Pathway Enrichment (ORA)**:
+   - Hypergeometric test against hallmarks of aging (Senescence, Telomeres, Epigenetics, mTOR, Mitochondria, Inflammaging) with Benjamini-Hochberg FDR correction.
+4. **Graph Neural Networks (GNN Lab)**:
+   - PyTorch-based **GCN** (spectral convolution) and **GraphSAGE** (inductive neighborhood aggregation) modeling network-level aging signals.
+   - Outputs explicitly designated as **computational predictions**.
+5. **Two-Phase Publication Reporting**:
+   - Generates publication-grade research reports in JSON and cryptographic PDF formats stamped with SHA-256 reproducibility hashes.
 
 ---
 
-## 🏛️ System Architecture
+## ðŸ“¥ Three Ways to Begin an Analysis
+
+BioAge-X provides three standardized entry paths feeding into the identical two-phase research pipeline:
+
+- **Option A â€” Synthetic Demo Cohort**: Load the pre-configured 150-sample multi-omics cohort with 120 CpGs and 150 transcriptomic features.
+- **Option B â€” Curated Public Benchmark**: Load real public whole-blood methylation benchmark data (**GSE40279 / Hannum 2013**, 80 samples, 71 canonical CpGs) with verified clinical covariates.
+- **Option C â€” Custom Multi-Omics Upload**: Upload custom CSV/TSV/Parquet/H5AD matrices in either sample-major or probe-major orientation.
+
+---
+
+## ðŸ›ï¸ System Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion ["1. Data Ingestion & Profiling"]
-        A[Raw Omics Files: CSV / TSV / Parquet / H5AD] --> B[Dataset Profiler]
+    subgraph Ingestion ["1. Data Ingestion & 3-Option Entry"]
+        A1[Option A: Synthetic Cohort] --> B[Dataset Profiler]
+        A2[Option B: Public GSE40279] --> B
+        A3[Option C: Custom Upload] --> B
         B --> C[Orientation & Modality Detection]
     end
 
-    subgraph Preprocessing ["2. Modality Pipelines"]
-        C --> D[DNA Methylation: Beta QC & Imputation]
-        C --> E[Transcriptomics: CPM & Log1p]
-        D & E --> F[Supervised Feature Selection]
+    subgraph Phase1 ["PHASE 1: Biological Age Prediction & Benchmarks"]
+        C --> D[Modality Preprocessing & Feature Selection]
+        D --> E[BioAge-X Models: ElasticNet / RF / XGB / Fusion]
+        D --> F[Reference Epigenetic Clocks: Horvath / Hannum / PhenoAge]
+        E & F --> G[Age Acceleration Residuals]
+        E --> H[SHAP Attribution Engine]
+        H --> I[Biomarker-to-Biology Bridge]
     end
 
-    subgraph Modeling ["3. Predictive Modeling"]
-        F --> G[ElasticNet Clock]
-        F --> H[Random Forest]
-        F --> I[XGBoost Ensemble]
-        F --> J[Multi-Omics Fusion: Early / Late]
+    subgraph Phase2 ["PHASE 2: GraphOmics-AI Network Biology"]
+        I --> J[Seed Entity & Gene Mapping]
+        J --> K[Biological Interactome Construction]
+        K --> L[Centrality Ranking & Community Detection]
+        J --> M[Pathway Over-Representation ORA]
+        K --> N[GNN Lab: GCN & GraphSAGE Modeling]
     end
 
-    subgraph Explainability ["4. Explainability & Topology"]
-        G & H & I & J --> K[Age Acceleration Residuals]
-        G & H & I & J --> L[SHAP Attribution Engine]
-        L --> M[Biological Interaction Network]
-        M --> N[GNN Module: GCN / GraphSAGE / GAT]
-        L --> O[Pathway Enrichment: Hypergeometric ORA]
-    end
-
-    subgraph Delivery ["5. Delivery & Reporting"]
-        K & L & M & N & O --> P[FastAPI REST Service]
-        P --> Q[Next.js 14 Scientific Dashboard]
-        P --> R[PDF Research Report Export]
+    subgraph Reporting ["Scientific Delivery & Reproducibility"]
+        G & H & L & M & N --> O[FastAPI REST Engine]
+        O --> P[Next.js 14 Two-Phase Scientific Workspace]
+        O --> Q[Cryptographic PDF Research Report]
     end
 ```
 
 ---
 
-## 🚀 Quick Start
+## ðŸš€ Quick Start
 
 ### Option A: Docker Compose (Recommended)
 
@@ -114,14 +169,15 @@ docker compose up --build
 
 ```bash
 # Clone the repository
-git clone https://github.com/bioage-x/bioage-x.git
+git clone https://github.com/AceAss/BioAge-X.git
 cd bioage-x
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Generate synthetic demo multi-omics cohort
+# Generate synthetic demo multi-omics cohort and public benchmark
 python scripts/generate_demo_data.py
+python scripts/create_public_benchmarks.py
 
 # Start FastAPI backend server
 uvicorn apps.api.main:app --host 0.0.0.0 --port 8000 --reload
@@ -139,7 +195,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🧪 Running Tests & Benchmarks
+## ðŸ§ª Running Tests & Benchmarks
 
 Run the complete test suite:
 
@@ -147,7 +203,7 @@ Run the complete test suite:
 python -m pytest tests/ -v
 ```
 
-Execute the full end-to-end benchmark pipeline:
+Execute the full end-to-end two-phase benchmark pipeline:
 
 ```bash
 python scripts/run_benchmark.py
@@ -155,26 +211,27 @@ python scripts/run_benchmark.py
 
 ---
 
-## 📊 Platform Dashboard Pages
+## ðŸ“Š Platform Research Workspace Navigation
 
-| Route | Functionality |
+| Route | Scientific Purpose |
 |:---|:---|
-| `/dashboard` | Executive KPIs, model comparisons, lead biomarkers, and recent runs |
-| `/datasets` | Multi-omics file upload, orientation detection, and matrix preview table |
-| `/analysis` | 12-Step guided workflow wizard and preprocessing parameter controls |
-| `/models` | Cross-model benchmarks (MAE, RMSE, R², Pearson, Spearman) and residual scatter |
-| `/explainability` | SHAP beeswarm summary plot and local sample waterfall decomposition |
-| `/biomarkers` | Filterable directory of prioritized molecular loci and functional annotations |
-| `/network` | Cytoscape.js interactive graph with centrality ranking and community clusters |
-| `/gnn` | GCN, GraphSAGE, and GAT node regression training and validation |
+| `/dashboard` | Two-Phase executive research overview, hypothesis cards, and KPI metrics |
+| `/datasets` | 3-Option data entry (Demo, GSE40279 Public, Custom Upload) and matrix profiling |
+| `/benchmarks` | Direct comparison against established epigenetic clocks (Horvath, Hannum, PhenoAge) |
+| `/analysis` | 12-Step reproducible research workflow wizard and pipeline configuration |
+| `/models` | Cross-model evaluation (MAE, RMSE, RÂ², Pearson r, Spearman $\rho$) |
+| `/explainability` | SHAP beeswarm global attributions and sample-level waterfall decompositions |
+| `/biomarkers` | Candidate Aging-Associated Biomarkers directory and "Continue to GraphOmics-AI" bridge |
+| `/network` | Interactive Cytoscape.js interactome with Top Aging Network Nodes table |
+| `/gnn` | GCN and GraphSAGE node-level aging score regression lab |
 | `/pathways` | Hypergeometric over-representation analysis against hallmarks of aging |
-| `/experiments` | Experiment tracking history with side-by-side run comparison mode |
-| `/reports` | Synthesized scientific report viewer and one-click PDF download |
-| `/settings` | System diagnostics, engine health checks, and scientific disclaimers |
+| `/experiments` | Experiment tracking history with SHA-256 reproducibility hashes |
+| `/reports` | Two-Phase scientific report viewer and one-click PDF export |
+| `/settings` | System diagnostics, engine health checks, and scientific nomenclature disclaimers |
 
 ---
 
-## 📜 Citation
+## ðŸ“œ Citation
 
 If you use BioAge-X in your academic research or teaching, please cite:
 
@@ -183,13 +240,14 @@ If you use BioAge-X in your academic research or teaching, please cite:
   author = {BioAge-X Research Collective},
   title = {BioAge-X: Explainable Multi-Omics Biological Age Estimation & Network Biology Platform},
   year = {2026},
-  url = {https://github.com/bioage-x/bioage-x},
+  url = {https://github.com/AceAss/BioAge-X},
   version = {0.1.0}
 }
 ```
 
 ---
 
-## 📄 License
+## ðŸ“„ License
 
 BioAge-X is licensed under the [Apache 2.0 License](LICENSE).
+

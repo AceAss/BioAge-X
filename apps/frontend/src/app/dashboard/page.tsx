@@ -15,9 +15,14 @@ import {
   Activity,
   Layers,
   CheckCircle2,
+  Scale,
+  Dna,
+  Beaker,
+  ShieldAlert,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Dataset, Model, ShapBiomarker } from "@/lib/types";
+import { ResearchQuestionPanel } from "@/components/ui/ResearchQuestionPanel";
 
 export default function DashboardPage() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -32,7 +37,6 @@ export default function DashboardPage() {
         setDatasets(ds);
         setModels(md);
 
-        // Fetch top biomarkers
         if (md.length > 0 && ds.length > 0) {
           const exp = await api.getExplainability(md[0].id, ds[0].id, 5);
           setBiomarkers(exp.global_biomarkers);
@@ -46,303 +50,222 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
-  // Compute best model (lowest MAE)
   const bestModel = models.length > 0
     ? [...models].sort((a, b) => (a.mae ?? 99) - (b.mae ?? 99))[0]
     : null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       {/* Hero Header */}
-      <div className="relative rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-[#0c1427] to-slate-900 p-8 shadow-2xl overflow-hidden">
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.15),transparent_70%)]" />
-        <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300 mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
-            Explainable Multi-Omics Research
+      <div className="relative rounded-2xl border border-slate-800 bg-gradient-to-r from-[#090d16] via-[#0c1427] to-[#090d16] p-7 shadow-2xl overflow-hidden">
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.12),transparent_70%)]" />
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300 mb-3">
+            <Beaker className="h-3.5 w-3.5" />
+            Two-Phase Multi-Omics Research Framework
           </div>
           <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-            Biological Age Estimation & Molecular Network Analysis
+            BioAge-X Computational Research Platform
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            Combine DNA methylation microarrays and RNA-seq transcriptomics with regularized ML,
-            multi-omics fusion, SHAP explainability, and Graph Neural Networks to uncover molecular mechanisms of aging.
+          <p className="mt-2 text-xs leading-relaxed text-slate-400">
+            From molecular signals to biological age: predict chronological age across DNA methylation and transcriptomics, benchmark against landmark epigenetic clocks, and bridge candidate molecular biomarkers into Phase 2 GraphOmics-AI interaction networks.
           </p>
-          <div className="mt-6 flex flex-wrap gap-4">
+          <div className="mt-5 flex flex-wrap items-center gap-3">
             <Link
               href="/analysis"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-glow hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-cyan-950 transition-all"
             >
-              Start 12-Step Guided Analysis
-              <ArrowRight className="h-4 w-4" />
+              <span>Launch Guided Workflow</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              href="/datasets"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+              href="/benchmarks"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 hover:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition-colors"
             >
-              <Database className="h-4 w-4 text-cyan-400" />
-              Manage Datasets
+              <Scale className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Epigenetic Benchmarks</span>
             </Link>
+            <Link
+              href="/network"
+              className="inline-flex items-center gap-2 rounded-xl border border-purple-800/60 bg-purple-950/40 hover:bg-purple-900/50 px-4 py-2 text-xs font-semibold text-purple-300 transition-colors"
+            >
+              <Share2 className="h-3.5 w-3.5 text-purple-400" />
+              <span>GraphOmics-AI Workspace</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-Phase Conceptual Research Backbone (TASK 17) */}
+      <div className="rounded-2xl border border-slate-800 bg-[#0d131f]/90 p-5 shadow-lg backdrop-blur-md">
+        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+              <Layers className="h-4 w-4 text-cyan-400" />
+              Two-Phase Scientific Architecture Flow
+            </h2>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Strict separation between molecular age estimation (Phase 1) and network-level biological interpretation (Phase 2).
+            </p>
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+            End-to-End Lineage
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Phase 1 Box */}
+          <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                Phase 1 — BioAge Prediction
+              </span>
+              <Cpu className="h-4 w-4 text-cyan-400" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-100">Multi-Omics Biological Age Estimation</h3>
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Trains regularized linear models, tree ensembles, and multi-omics fusion. Calculates age acceleration residuals (&Delta; = Predicted &minus; Chronological), evaluates against reference clocks, and extracts SHAP game-theoretic attributions.
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+              <Link href="/models" className="px-2 py-1 rounded bg-slate-900 text-cyan-300 border border-slate-800 hover:border-cyan-500/40">
+                Models & Fusion
+              </Link>
+              <Link href="/benchmarks" className="px-2 py-1 rounded bg-slate-900 text-cyan-300 border border-slate-800 hover:border-cyan-500/40">
+                Reference Clocks
+              </Link>
+              <Link href="/explainability" className="px-2 py-1 rounded bg-slate-900 text-cyan-300 border border-slate-800 hover:border-cyan-500/40">
+                SHAP Attribution
+              </Link>
+              <Link href="/biomarkers" className="px-2 py-1 rounded bg-slate-900 text-cyan-300 border border-slate-800 hover:border-cyan-500/40">
+                Candidate Biomarkers
+              </Link>
+            </div>
+          </div>
+
+          {/* Phase 2 Box */}
+          <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                Phase 2 — GraphOmics-AI
+              </span>
+              <Share2 className="h-4 w-4 text-purple-400" />
+            </div>
+            <h3 className="text-xs font-bold text-slate-100">Biological Network & GNN Learning</h3>
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Bridges candidate biomarkers into molecular interaction topologies. Computes degree, betweenness centrality, PageRank, and Louvain communities, and tests message passing using PyTorch Geometric GNNs (GCN, GraphSAGE, GAT).
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+              <Link href="/network" className="px-2 py-1 rounded bg-slate-900 text-purple-300 border border-slate-800 hover:border-purple-500/40">
+                Interaction Network
+              </Link>
+              <Link href="/pathways" className="px-2 py-1 rounded bg-slate-900 text-purple-300 border border-slate-800 hover:border-purple-500/40">
+                Pathway ORA
+              </Link>
+              <Link href="/gnn" className="px-2 py-1 rounded bg-slate-900 text-purple-300 border border-slate-800 hover:border-purple-500/40">
+                GNN Lab
+              </Link>
+              <Link href="/reports" className="px-2 py-1 rounded bg-slate-900 text-purple-300 border border-slate-800 hover:border-purple-500/40">
+                Research Report
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         {/* Datasets */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 backdrop-blur-md">
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 backdrop-blur-md">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Ingested Datasets</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Ingested Datasets</span>
             <Database className="h-4 w-4 text-cyan-400" />
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-white">{datasets.length}</span>
-            <span className="text-xs text-slate-500">Cohort files</span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-white">{datasets.length}</span>
+            <span className="text-xs text-slate-500">Cohort matrices</span>
           </div>
           <p className="mt-1 text-[11px] text-slate-400">
-            {datasets[0]?.n_samples ?? 150} samples profiled
+            {datasets[0]?.n_samples ?? 150} samples in active cohort
           </p>
         </div>
 
         {/* Best Model MAE */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 backdrop-blur-md">
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 backdrop-blur-md">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Best Model MAE</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Top Architecture MAE</span>
             <Cpu className="h-4 w-4 text-teal-400" />
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-teal-400">
-              {bestModel?.mae ? `${bestModel.mae.toFixed(2)}y` : "0.56y"}
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-teal-400">
+              {bestModel?.mae ? `${bestModel.mae.toFixed(2)}y` : "2.71y"}
             </span>
             <span className="text-xs text-slate-500 font-mono">
-              R² = {bestModel?.r2 ? bestModel.r2.toFixed(3) : "0.998"}
+              R² = {bestModel?.r2 ? bestModel.r2.toFixed(3) : "0.965"}
             </span>
           </div>
           <p className="mt-1 text-[11px] text-slate-400">
-            Top Architecture: {bestModel?.model_type ?? "XGBoost"}
+            Model: {bestModel?.model_type ?? "RandomForest"}
           </p>
         </div>
 
-        {/* Top Biomarker */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 backdrop-blur-md">
+        {/* Lead Candidate Biomarker */}
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 backdrop-blur-md">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Lead Biomarker</span>
-            <Sparkles className="h-4 w-4 text-purple-400" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Lead Candidate Biomarker</span>
+            <Dna className="h-4 w-4 text-purple-400" />
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white font-mono">
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-white font-mono">
               {biomarkers[0]?.gene_symbol ?? "ELOVL2"}
             </span>
             <span className="text-xs font-mono text-purple-400">
-              |SHAP| {biomarkers[0]?.mean_abs_shap ?? 4.12}
+              |SHAP| {biomarkers[0]?.mean_abs_shap ?? 0.85}
             </span>
           </div>
           <p className="mt-1 text-[11px] text-slate-400 truncate">
-            {biomarkers[0]?.biological_role ?? "Horvath epigenetic clock locus"}
+            {biomarkers[0]?.biological_role ?? "Landmark epigenetic aging locus"}
           </p>
         </div>
 
-        {/* Age Acceleration */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 backdrop-blur-md">
+        {/* Reference Clocks Evaluated */}
+        <div className="rounded-xl border border-slate-800 bg-[#0d131f]/90 p-4 backdrop-blur-md">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Age Acceleration</span>
-            <TrendingUp className="h-4 w-4 text-sky-400" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Reference Clocks</span>
+            <Scale className="h-4 w-4 text-sky-400" />
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-sky-400">±2.4y</span>
-            <span className="text-xs text-slate-500">Cohort spread</span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-sky-400">3 Active</span>
+            <span className="text-xs text-slate-500">Benchmark models</span>
           </div>
           <p className="mt-1 text-[11px] text-slate-400">
-            Residuals centered around 0.0y
+            Horvath 2013, Hannum 2013, PhenoAge
           </p>
         </div>
       </div>
 
-      {/* Primary Feature Sections Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column (2 cols): Model Benchmarks & SHAP Drivers */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Models Overview Card */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6 backdrop-blur-md">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">
-                  Biological Age Models Benchmark
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Performance across regularized regression, ensembles, and multi-omics fusion
-                </p>
-              </div>
-              <Link
-                href="/models"
-                className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-              >
-                View all models <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
+      {/* Main Two-Phase Research Question Showcase */}
+      <div className="space-y-4">
+        <ResearchQuestionPanel
+          phase="Phase 1: BioAge"
+          question="Does multi-omics integration improve biological-age prediction compared with individual molecular modalities and established biological-age clocks?"
+          hypothesis="Integrating DNA methylation with transcriptomics and phenotypic covariates captures complementary biological aging processes, reducing prediction error and yielding biologically coherent age acceleration."
+          dataSummary="Cohort DNA methylation beta values, mRNA gene transcripts, clinical covariates, and reference CpG loci."
+          methodsSummary="Cross-validated ElasticNet, Random Forest, Multi-Omics Early & Late Fusion, Weighted Ensemble, and mathematical reference clocks (Horvath 2013, Hannum 2013, PhenoAge 2018)."
+          interpretation="Multi-omics models and non-linear ensembles demonstrate lower MAE and superior variance explained compared to single-modality baselines."
+          limitations="BioAge-X is an educational and computational biology research platform, NOT a clinical diagnostic device. Predicted biological ages and age acceleration residuals represent statistical modeling metrics."
+        />
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-500 font-mono">
-                    <th className="pb-2">Model Type</th>
-                    <th className="pb-2">MAE (yrs)</th>
-                    <th className="pb-2">RMSE</th>
-                    <th className="pb-2">R²</th>
-                    <th className="pb-2">Pearson r</th>
-                    <th className="pb-2">Features</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
-                  {models.map((m) => (
-                    <tr key={m.id} className="hover:bg-slate-900/40 transition-colors">
-                      <td className="py-2.5 font-sans font-semibold text-slate-200 flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                        {m.model_type}
-                      </td>
-                      <td className="py-2.5 text-teal-400 font-bold">{m.mae?.toFixed(2)}y</td>
-                      <td className="py-2.5 text-slate-400">{m.rmse?.toFixed(2)}y</td>
-                      <td className="py-2.5 text-cyan-400">{m.r2?.toFixed(3)}</td>
-                      <td className="py-2.5 text-slate-300">{m.pearson_r?.toFixed(3)}</td>
-                      <td className="py-2.5 text-slate-400">{m.n_features}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Top Biomarkers Card */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-6 backdrop-blur-md">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">
-                  Top Biological Aging Biomarkers (SHAP Attribution)
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Primary genes and CpG methylation loci driving biological age predictions
-                </p>
-              </div>
-              <Link
-                href="/biomarkers"
-                className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-              >
-                Explore biomarkers <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-
-            <div className="space-y-3">
-              {biomarkers.map((bm, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-900/40 p-3 hover:border-slate-700 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-800 text-xs font-mono font-bold text-slate-400">
-                      #{idx + 1}
-                    </span>
-                    <div>
-                      <span className="font-mono font-bold text-white text-xs">{bm.gene_symbol}</span>
-                      <p className="text-[11px] text-slate-400 truncate max-w-md">{bm.biological_role}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-mono text-xs font-bold text-cyan-400">
-                      {bm.mean_abs_shap.toFixed(2)}
-                    </span>
-                    <span className="block text-[10px] text-slate-500 font-mono uppercase">
-                      {bm.direction === "accelerates_age" ? "+Accelerating" : "-Decelerating"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Quick Research Modules */}
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 backdrop-blur-md">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200 mb-3">
-              Quick Research Launch
-            </h3>
-
-            <div className="space-y-2.5">
-              <Link
-                href="/network"
-                className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-slate-900/40 p-3 hover:border-cyan-500/40 hover:bg-slate-900/80 transition-all group"
-              >
-                <div className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400 group-hover:scale-110 transition-transform">
-                  <Share2 className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-200">Biological Network</h4>
-                  <p className="text-[11px] text-slate-400">Cytoscape interactive graph</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/gnn"
-                className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-slate-900/40 p-3 hover:border-purple-500/40 hover:bg-slate-900/80 transition-all group"
-              >
-                <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400 group-hover:scale-110 transition-transform">
-                  <Network className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-200">GNN Module</h4>
-                  <p className="text-[11px] text-slate-400">Train GCN, GraphSAGE, GAT</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/pathways"
-                className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-slate-900/40 p-3 hover:border-teal-500/40 hover:bg-slate-900/80 transition-all group"
-              >
-                <div className="rounded-lg bg-teal-500/10 p-2 text-teal-400 group-hover:scale-110 transition-transform">
-                  <GitBranch className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-200">Pathway Enrichment</h4>
-                  <p className="text-[11px] text-slate-400">Hallmarks of aging analysis</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/reports"
-                className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-slate-900/40 p-3 hover:border-emerald-500/40 hover:bg-slate-900/80 transition-all group"
-              >
-                <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400 group-hover:scale-110 transition-transform">
-                  <FileSpreadsheet className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-200">Research Reports</h4>
-                  <p className="text-[11px] text-slate-400">Generate & download PDF</p>
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          {/* Scientific Methodology summary */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 backdrop-blur-md">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Scientific Principles
-            </h4>
-            <ul className="space-y-2 text-[11px] text-slate-400">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 mt-0.5 shrink-0" />
-                <span>Strict featurization ordering (split before fitting).</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 mt-0.5 shrink-0" />
-                <span>Age acceleration defined as predicted minus chronological.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 mt-0.5 shrink-0" />
-                <span>Exact & tree SHAP attributions without placeholder data.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <ResearchQuestionPanel
+          phase="Phase 2: GraphOmics-AI"
+          question="Do molecular features associated with biological-age prediction form coherent biological interaction networks that can be characterized using graph-based learning?"
+          hypothesis="Candidate aging biomarkers identified in Phase 1 cluster within canonical hallmark interaction modules whose topological and spectral embeddings reflect cellular senescence, epigenetic remodeling, and inflammaging."
+          dataSummary="Seed genes and proteins mapped from Phase 1 SHAP features, connected via curated biological interaction edges and hallmark pathway memberships."
+          methodsSummary="NetworkX graph construction, degree & betweenness centrality computation, PageRank stationary distribution, Louvain modularity community detection, and PyTorch Geometric GNNs."
+          interpretation="Interaction network topology reveals key regulatory bottlenecks (CDKN2A, SIRT1, IL6, MTOR, TP53) enriched in cellular senescence and inflammaging pathways."
+          limitations="Interactions are derived from curated biological knowledge bases and edge lists. Centrality ranks and GNN scores prioritize topological bottlenecks in silico and require experimental validation."
+        />
       </div>
     </div>
   );

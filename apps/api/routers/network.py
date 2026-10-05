@@ -31,6 +31,9 @@ def build_network(request: NetworkBuildRequest):
         biomarker_genes=biomarkers,
         edge_list_path=edge_path,
         include_pathways=request.include_pathways,
+        network_source=request.network_source,
+        min_confidence=request.min_confidence,
+        species=request.species,
     )
 
     cyto_data = graph_builder.to_cytoscape_json()

@@ -21,6 +21,7 @@ from apps.api.routers import (
     datasets_router,
     analyses_router,
     models_router,
+    benchmarks_router,
     explainability_router,
     network_router,
     gnn_router,
@@ -28,6 +29,7 @@ from apps.api.routers import (
     reports_router,
     experiments_router,
     health_router,
+    integrations_router,
 )
 from bioage.utils.logger import get_logger
 
@@ -56,9 +58,11 @@ app.add_middleware(
 # Register API Routers under /api/v1
 api_prefix = settings.API_V1_STR
 app.include_router(health_router, prefix=api_prefix)
+app.include_router(integrations_router, prefix=api_prefix)
 app.include_router(datasets_router, prefix=api_prefix)
 app.include_router(analyses_router, prefix=api_prefix)
 app.include_router(models_router, prefix=api_prefix)
+app.include_router(benchmarks_router, prefix=api_prefix)
 app.include_router(explainability_router, prefix=api_prefix)
 app.include_router(network_router, prefix=api_prefix)
 app.include_router(gnn_router, prefix=api_prefix)

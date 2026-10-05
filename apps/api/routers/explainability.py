@@ -54,3 +54,39 @@ def explain_model_predictions(request: ExplainRequest, db: Session = Depends(get
         beeswarm_sample=beeswarm_sample,
         waterfall_sample=waterfall_sample,
     )
+
+
+@router.get("/bridge/{model_id}")
+def get_biomarker_phase2_bridge(model_id: str, db: Session = Depends(get_db)):
+    """
+    Constructs the formal Phase 1 to Phase 2 biomarker-to-biology bridge.
+    Transforms model/SHAP important features into biologically annotated candidate biomarkers
+    and generates seed entities and pathways for GraphOmics-AI network construction.
+    """
+    import json
+    from bioage.explainability.biomarker_bridge import BiomarkerToBiologyBridge
+
+    model_record = db.query(ModelRecord).filter(ModelRecord.id == model_id).first()
+    if not model_record:
+        raise HTTPException(status_code=404, detail="Model record not found")
+
+    importances = json.loads(model_record.feature_importance_json) if model_record.feature_importance_json else {}
+    if not importances:
+        raise HTTPException(status_code=400, detail="Model does not contain feature importance data")
+
+    bridge = BiomarkerToBiologyBridge()
+    candidates = bridge.build_candidate_biomarkers(importances, top_n=20)
+    payload = bridge.generate_phase2_bridge_payload(candidates)
+
+    return {
+        "model_id": model_record.id,
+        "model_name": model_record.name,
+        "model_type": model_record.model_type,
+        "dataset_id": model_record.dataset_id,
+        "bridge_payload": payload,
+        "disclaimer": (
+            "These molecular features are classified as Candidate Aging-Associated Features or Model-Associated Biomarkers. "
+            "They are statistical predictive associations and do not prove causal aging mechanisms without biological validation."
+        ),
+    }
+

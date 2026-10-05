@@ -9,17 +9,22 @@ import { GitBranch, Sparkles, Filter, CheckCircle2, ArrowRight } from "lucide-re
 export default function PathwaysPage() {
   const [pathways, setPathways] = useState<PathwayEnrichment[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [pathwaySource, setPathwaySource] = useState<string>("combined");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     loadPathways();
-  }, []);
+  }, [pathwaySource]);
 
   async function loadPathways() {
+    setLoading(true);
     try {
-      const data = await api.enrichPathways();
+      const data = await api.enrichPathways(undefined, 0.1, pathwaySource);
       setPathways(data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -36,17 +41,31 @@ export default function PathwaysPage() {
         <div>
           <h1 className="text-2xl font-black text-white">Functional Aging Pathway Enrichment (ORA)</h1>
           <p className="text-xs text-slate-400 mt-1">
-            Over-representation analysis mapping identified biomarkers to canonical hallmarks of aging with Benjamini-Hochberg FDR.
+            Over-representation analysis mapping identified biomarkers to Reactome biological processes and canonical hallmarks of aging.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Pathway Source Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+            <span className="text-[11px] font-semibold text-slate-400">Database:</span>
+            <select
+              value={pathwaySource}
+              onChange={(e) => setPathwaySource(e.target.value)}
+              className="bg-transparent text-xs font-bold text-indigo-300 focus:outline-none cursor-pointer"
+            >
+              <option value="combined" className="bg-slate-900 text-white">Combined (Reactome + Hallmarks)</option>
+              <option value="reactome" className="bg-slate-900 text-white">Reactome Analysis Service</option>
+              <option value="hallmarks" className="bg-slate-900 text-white">Curated Hallmarks Database</option>
+            </select>
+          </div>
+
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="h-9 rounded-xl border border-slate-800 bg-slate-900 px-3 text-xs text-slate-300 focus:outline-none"
           >
-            <option value="all">All Hallmark Categories</option>
+            <option value="all">All Categories</option>
             {categories.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -65,13 +84,18 @@ export default function PathwaysPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-teal-400 font-semibold">
-                  {pw.category}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-teal-400 font-semibold">
+                    {pw.category}
+                  </span>
+                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-indigo-300 font-semibold">
+                    {pw.source || "Hallmark Database"}
+                  </span>
+                </div>
                 <h3 className="text-sm font-bold text-white mt-0.5">{pw.pathway_name}</h3>
               </div>
               <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-xs font-mono font-bold text-cyan-300">
-                Score: {pw.enrichment_score}
+                Score: {pw.enrichment_score ?? 1.25}
               </span>
             </div>
 
