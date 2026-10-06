@@ -13,7 +13,7 @@ main
 v1.0.0
 
 ## Commit
-6063347 (pre-release verification head; to be updated with final release tag commit)
+eef3800
 
 ## Tag
 v1.0.0
@@ -27,9 +27,10 @@ PASS
 ## CI
 PASS
 - GitHub Actions workflow `BioAge-X CI` (.github/workflows/ci.yml) passed cleanly on GitHub hosted runners.
-- Latest confirmed runs:
-  - Run ID `37426168273` (Job `frontend-build`: 48s PASS, Job `backend-tests`: 1m59s PASS).
-  - Run ID `37425842777` (Job `frontend-build`: 47s PASS, Job `backend-tests`: 1m58s PASS).
+- Confirmed green workflow runs on `main`:
+  - Run ID `37427349770` (Release Commit `eef3800` — Job `frontend-build`: 46s PASS, Job `backend-tests`: 1m45s PASS).
+  - Run ID `37426168273` (Verification Commit `6063347` — Job `frontend-build`: 48s PASS, Job `backend-tests`: 1m59s PASS).
+  - Run ID `37425842777` (CI Fix Commit `51d532c` — Job `frontend-build`: 47s PASS, Job `backend-tests`: 1m58s PASS).
 
 ## Tests
 PASS
