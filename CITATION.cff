@@ -3,9 +3,9 @@ message: "If you use BioAge-X in your computational biology research or educatio
 authors:
   - name: "BioAge-X Research Collective"
 title: "BioAge-X: Explainable Multi-Omics Biological Age Estimation & Network Biology Platform"
-version: 0.1.0
-date-released: 2026-10-05
-url: "https://github.com/bioage-x/bioage-x"
+version: 1.0.0
+date-released: 2026-10-06
+url: "https://github.com/AceAss/BioAge-X"
 license: Apache-2.0
 keywords:
   - computational biology

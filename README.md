@@ -64,7 +64,7 @@ BioAge-X operates a formal two-phase computational biology pipeline:
 
 ## 🌟 Core Features & Research Modules
 
-### 1. Universal Biological Data Acquisition (12 Repositories)
+### 1. 📥 Universal Biological Data Acquisition (12 Repositories)
 Directly queries, streams, validates, and ingests biological datasets from 12 biological repositories:
 - **Genomics & Epigenomics**: NCBI GEO (`GSE*`, `GPL*`, `GSM*`), NCBI SRA (`SRR*`), EMBL-EBI ENA (`PRJEB*`).
 - **Functional Genomics**: EMBL-EBI ArrayExpress (`E-*`), EMBL-EBI BioStudies (`S-*`).
@@ -82,11 +82,11 @@ Directly queries, streams, validates, and ingests biological datasets from 12 bi
 - **95% Bootstrap Confidence Intervals**: Empirical bootstrap resamples ($B=1000$) for MAE, RMSE, and $R^2$.
 - **Cross-Validation Distributions**: Preserves complete fold-by-fold metrics (`Fold 1` through `Fold K`) to eliminate aggregate score opacity.
 - **Age-Bias Analysis**: Stratifies predictions across Young ($<40\text{ y}$), Middle ($40-65\text{ y}$), and Older ($>65\text{ y}$) bins to diagnose regression toward the mean.
-- **External Validation**: Dedicated workflow training on Cohort A and testing on Cohort B without model retraining, coupled with Kolmogorov-Smirnov demographic and molecular dataset shift tests.
+- **External Validation**: Dedicated workflow training on Cohort A → testing on Cohort B without model retraining, coupled with Kolmogorov-Smirnov demographic and molecular dataset shift tests.
 
 ### 4. Candidate Biomarker & Network Robustness
 - **Biomarker Robustness Score**: Mathematical composite: $\text{Score} = 0.40 \cdot \text{FoldFreq} + 0.35 \cdot \text{DirConsistency} + 0.25 \cdot \text{NormSHAP}$. Separates *Highly Stable* features from *Single-Experiment Candidates*.
-- **Annotation Provenance**: Distinguishes *Direct Mapping* from *Inferred Association* and *No Mapping Available*.
+- **Annotation Provenance**: Strict biological lineage resolution ($\text{CpG} \rightarrow \text{Gene} \rightarrow \text{Ensembl} \rightarrow \text{STRING} \rightarrow \text{Reactome}$). Distinguishes *Direct Mapping* from *Inferred Association* and *No Mapping Available*.
 - **Network Perturbation**: Sweeps edge confidence thresholds (400, 700, 900) to quantify topological hub stability.
 
 ### 5. Optional Gemini AI Research Assistant
