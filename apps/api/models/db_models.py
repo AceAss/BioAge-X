@@ -3,11 +3,15 @@ SQLAlchemy ORM models for BioAge-X API database.
 Tracks datasets, analyses, trained models, and experiment runs.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, Float, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from apps.api.core.database import Base
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 class DatasetRecord(Base):
@@ -24,7 +28,7 @@ class DatasetRecord(Base):
     age_column = Column(String(100), nullable=True)
     detected_modality = Column(String(50), default="unknown")
     profile_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     analyses = relationship("AnalysisRecord", back_populates="dataset", cascade="all, delete-orphan")
     models = relationship("ModelRecord", back_populates="dataset", cascade="all, delete-orphan")
@@ -40,7 +44,7 @@ class AnalysisRecord(Base):
     preprocessed_path = Column(String(500), nullable=True)
     provenance_json = Column(Text, nullable=True)
     selected_features_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     dataset = relationship("DatasetRecord", back_populates="analyses")
 
@@ -61,7 +65,7 @@ class ModelRecord(Base):
     training_time_sec = Column(Float, default=0.0)
     artifact_path = Column(String(500), nullable=True)
     feature_importance_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     dataset = relationship("DatasetRecord", back_populates="models")
 
@@ -79,4 +83,4 @@ class ExperimentRecord(Base):
     report_json = Column(Text, nullable=True)
     pdf_path = Column(String(500), nullable=True)
     reproducibility_hash = Column(String(64), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)

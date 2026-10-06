@@ -90,3 +90,30 @@ def test_shap_feature_and_sample_alignment():
     global_imp = explainer.get_global_importance(top_k=len(avail))
     assert len(global_imp) == len(avail)
     assert all("mean_abs_shap" in item for item in global_imp)
+
+
+def test_shap_native_and_analytical_comparison():
+    demo_file = root_dir / "data" / "example" / "demo_multiomics.csv"
+    if not demo_file.exists():
+        pytest.skip("Demo dataset not found")
+
+    df = pd.read_csv(demo_file)
+    y = df["chronological_age"]
+    cpg_cols = [c for c in df.columns if c.startswith("cg")][:8]
+    X = df[cpg_cols].fillna(df[cpg_cols].median())
+
+    # Test Random Forest comparative benchmark
+    rf_model = BioAgeRandomForest(n_estimators=20, random_state=42)
+    rf_model.fit(X, y)
+
+    rf_explainer = BioAgeShapExplainer(rf_model)
+    comparison = rf_explainer.compare_native_vs_analytical(X)
+
+    assert comparison["efficiency_verified"] is True
+    assert comparison["max_efficiency_diff_analytical"] < 1e-3
+    if comparison["native_available"]:
+        assert comparison["max_efficiency_diff_native"] < 1e-3
+        assert comparison["native_engine"] == "native_tree"
+        assert comparison["mean_importance_correlation"] is not None
+        # Strong directional agreement between native TreeExplainer and normalized analytical attribution
+        assert comparison["mean_importance_correlation"] > 0.40

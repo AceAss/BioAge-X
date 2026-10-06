@@ -1,4 +1,4 @@
-﻿# BioAge-X GitHub Release Audit
+# BioAge-X GitHub Release Audit
 
 **Audit Date**: 2026-10-06
 **Auditor**: Antigravity IDE — Automated Release Verification

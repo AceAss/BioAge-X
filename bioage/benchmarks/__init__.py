@@ -9,6 +9,9 @@ from bioage.benchmarks.clocks import (
     HorvathClock,
     HannumClock,
     PhenoAgeClock,
+    GrimAgeClock,
+    DunedinPACEClock,
+    ClockCompatibilityEngine,
     ReferenceClockBenchmarkSuite,
     BenchmarkComparisonResult,
 )
@@ -18,6 +21,9 @@ __all__ = [
     "HorvathClock",
     "HannumClock",
     "PhenoAgeClock",
+    "GrimAgeClock",
+    "DunedinPACEClock",
+    "ClockCompatibilityEngine",
     "ReferenceClockBenchmarkSuite",
     "BenchmarkComparisonResult",
 ]

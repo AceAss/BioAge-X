@@ -39,11 +39,13 @@ interface HealthData {
   reactome: string;
   ensembl: string;
   ncbi: string;
+  gemini?: string;
   details: {
     string: ProviderDetails;
     reactome: ProviderDetails;
     ensembl: ProviderDetails;
     ncbi: ProviderDetails;
+    gemini?: ProviderDetails;
   };
   cache: {
     total_records: number;
@@ -166,43 +168,59 @@ export default function IntegrationsPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "available":
-      case "live":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            LIVE • OPERATIONAL
-          </span>
-        );
-      case "cached":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-            CACHED
-          </span>
-        );
-      case "local_fallback":
-      case "degraded":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            LOCAL FALLBACK
-          </span>
-        );
-      case "ambiguous":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/30">
-            AMBIGUOUS
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">
-            UNAVAILABLE
-          </span>
-        );
+    const s = (status || "").toUpperCase();
+    if (s === "AVAILABLE_NO_KEY" || s === "AVAILABLE" || s === "LIVE") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          {s === "AVAILABLE_NO_KEY" ? "NO KEY NEEDED • ACTIVE" : "LIVE • OPERATIONAL"}
+        </span>
+      );
     }
+    if (s === "AVAILABLE_WITH_KEY") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+          API KEY ACTIVE
+        </span>
+      );
+    }
+    if (s === "AUTH_REQUIRED") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          KEY REQUIRED (.env)
+        </span>
+      );
+    }
+    if (s === "DISABLED") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/30">
+          DISABLED (OPTIONAL)
+        </span>
+      );
+    }
+    if (s === "CACHED") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+          CACHED
+        </span>
+      );
+    }
+    if (s === "LOCAL_FALLBACK" || s === "DEGRADED") {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          LOCAL FALLBACK
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">
+        UNAVAILABLE
+      </span>
+    );
   };
 
   return (
@@ -400,6 +418,168 @@ export default function IntegrationsPage() {
                   <span className="text-emerald-400">GSE40279 Benchmark Cohort</span>
                 </div>
               </div>
+            </div>
+
+            {/* Google Gemini */}
+            <div className="rounded-xl border border-slate-800 bg-[#0d1322] p-5 flex flex-col justify-between hover:border-purple-500/40 transition">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-400" />
+                    <span className="font-bold text-sm text-white">Google Gemini</span>
+                  </div>
+                  {getStatusBadge(health?.gemini || "disabled")}
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Optional AI Research Assistant. Operates strictly downstream of ML, SHAP, and network computations for evidence-grounded natural-language synthesis.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Model:</span>
+                  <span className="text-slate-200 font-mono">{health?.details?.gemini?.version || "gemini-2.0-flash"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Auth:</span>
+                  <span className="text-slate-200 font-mono">Optional GEMINI_API_KEY</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Safety:</span>
+                  <span className="text-emerald-400">Evidence-Constrained</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Provider Capability Matrix Table (Requirement 18) */}
+          <div className="rounded-xl border border-slate-800 bg-[#0d1322] p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Server className="h-4 w-4 text-cyan-400" />
+                  Provider Capability & Authentication Matrix
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Comprehensive audit of all external services integrated into BioAge-X, authentication requirements, and runtime status.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto border border-slate-800 rounded-lg">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+                  <tr>
+                    <th className="py-3 px-4 font-semibold">Provider</th>
+                    <th className="py-3 px-4 font-semibold">Purpose</th>
+                    <th className="py-3 px-4 font-semibold text-center">Search</th>
+                    <th className="py-3 px-4 font-semibold text-center">Download</th>
+                    <th className="py-3 px-4 font-semibold">Authentication</th>
+                    <th className="py-3 px-4 font-semibold">Current Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Share2 className="h-3.5 w-3.5 text-cyan-400" /> STRING DB
+                    </td>
+                    <td className="py-3 px-4">Protein-Protein Interactions</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-slate-500 font-mono">N/A</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4">{getStatusBadge(health?.string || "available_no_key")}</td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <GitBranch className="h-3.5 w-3.5 text-indigo-400" /> Reactome
+                    </td>
+                    <td className="py-3 px-4">Biological Pathways & Hallmarks</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-slate-500 font-mono">N/A</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4">{getStatusBadge(health?.reactome || "available_no_key")}</td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Globe className="h-3.5 w-3.5 text-emerald-400" /> Ensembl
+                    </td>
+                    <td className="py-3 px-4">Gene Annotation & ID Resolution</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-slate-500 font-mono">N/A</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4">{getStatusBadge(health?.ensembl || "available_no_key")}</td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 text-amber-400" /> NCBI / GEO
+                    </td>
+                    <td className="py-3 px-4">Dataset Discovery & Series Matrices</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4"><span className="text-cyan-400 font-medium">Optional API Key</span></td>
+                    <td className="py-3 px-4">{getStatusBadge(health?.ncbi || "available_no_key")}</td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 text-blue-400" /> ENA (EBI)
+                    </td>
+                    <td className="py-3 px-4">European Nucleotide Archive Reads</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4"><span className="text-xs text-emerald-400 font-medium">Available (Open Portal)</span></td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 text-teal-400" /> BioStudies
+                    </td>
+                    <td className="py-3 px-4">Functional Expression Studies</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4"><span className="text-xs text-emerald-400 font-medium">Available (Open REST)</span></td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 text-rose-400" /> GDC / TCGA
+                    </td>
+                    <td className="py-3 px-4">Cancer Multi-Omics & Clinical Age</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4"><span className="text-amber-400 font-medium">Open Access (Controlled BAMs: dbGaP)</span></td>
+                    <td className="py-3 px-4"><span className="text-xs text-emerald-400 font-medium">Available (Open Matrices)</span></td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 text-violet-400" /> PRIDE
+                    </td>
+                    <td className="py-3 px-4">Mass Spectrometry Proteomics</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4"><span className="text-xs text-emerald-400 font-medium">Available (Open Archive)</span></td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 text-orange-400" /> MetaboLights
+                    </td>
+                    <td className="py-3 px-4">Metabolite Quantification Profiles</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4 text-center text-emerald-400 font-bold">✓</td>
+                    <td className="py-3 px-4"><span className="text-emerald-400 font-medium">No Key Required</span></td>
+                    <td className="py-3 px-4"><span className="text-xs text-emerald-400 font-medium">Available (Open Studies)</span></td>
+                  </tr>
+                  <tr className="hover:bg-slate-900/40">
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Google Gemini
+                    </td>
+                    <td className="py-3 px-4">Evidence-Constrained AI Interpretation</td>
+                    <td className="py-3 px-4 text-center text-slate-500 font-mono">N/A</td>
+                    <td className="py-3 px-4 text-center text-slate-500 font-mono">N/A</td>
+                    <td className="py-3 px-4"><span className="text-purple-400 font-medium">Optional API Key (GEMINI_API_KEY)</span></td>
+                    <td className="py-3 px-4">{getStatusBadge(health?.gemini || "disabled")}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 

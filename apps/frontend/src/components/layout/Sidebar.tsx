@@ -18,6 +18,10 @@ import {
   FileSpreadsheet,
   Settings,
   Globe,
+  Search,
+  ArrowRightLeft,
+  Layers,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +30,7 @@ const NAV_GROUPS = [
     group: "Overview & Data",
     items: [
       { label: "Research Overview", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Dataset Explorer", href: "/datasets/explorer", icon: Search },
       { label: "Multi-Omics Datasets", href: "/datasets", icon: Database },
       { label: "External Knowledge", href: "/integrations", icon: Globe },
     ],
@@ -49,9 +54,12 @@ const NAV_GROUPS = [
     ],
   },
   {
-    group: "Reproducibility & Reports",
+    group: "Reproducibility & Rigor",
     items: [
       { label: "Experiment Tracking", href: "/experiments", icon: History },
+      { label: "Compare Experiments", href: "/experiments/compare", icon: ArrowRightLeft },
+      { label: "Ablation Studies", href: "/experiments/ablation", icon: Layers },
+      { label: "Scientific Limitations", href: "/limitations", icon: ShieldAlert },
       { label: "Research Reports", href: "/reports", icon: FileSpreadsheet },
       { label: "Platform Settings", href: "/settings", icon: Settings },
     ],

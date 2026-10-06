@@ -187,6 +187,7 @@ class IntegrationsHealthResponse(BaseModel):
     reactome: str
     ensembl: str
     ncbi: str
+    gemini: Optional[str] = "DISABLED"
     details: Dict[str, Any]
     cache: Dict[str, Any]
 
@@ -205,6 +206,14 @@ class ReportResponseSchema(BaseModel):
     report_data: Dict[str, Any]
 
 
+class ExperimentCreateRequest(BaseModel):
+    name: str = "BioAge-X Experiment"
+    dataset_id: str
+    model_type: str = "XGBoost"
+    analysis_id: Optional[str] = None
+    hyperparameters: Optional[Dict[str, Any]] = None
+
+
 class ExperimentResponseSchema(BaseModel):
     id: str
     name: str
@@ -215,3 +224,116 @@ class ExperimentResponseSchema(BaseModel):
     acceleration_summary: Dict[str, Any]
     pdf_url: Optional[str] = None
     created_at: str
+
+
+class DataSourceSummarySchema(BaseModel):
+    repository: str
+    category: str
+    description: str
+    search_supported: bool
+    download_supported: bool
+    auto_ingest: str
+    access_type: str
+    supported_accessions: List[str] = []
+
+
+class DatasetDownloadRequest(BaseModel):
+    option_id: Optional[str] = None
+
+
+class DownloadJobResponseSchema(BaseModel):
+    job_id: str
+    task_type: str
+    status: str
+    progress: float
+    status_message: str
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    error: Optional[str] = None
+    downloaded_bytes: Optional[int] = None
+    total_bytes: Optional[int] = None
+    speed_bytes_sec: Optional[float] = None
+    result_data: Optional[Dict[str, Any]] = None
+
+
+class DatasetImportRequest(BaseModel):
+    source_url_or_path: str
+    name: Optional[str] = None
+    target_age_column: Optional[str] = None
+
+
+class ManifestImportRequest(BaseModel):
+    manifest_yaml_or_json: str
+    base_dir: Optional[str] = None
+
+
+class ClockCompatibilityRequest(BaseModel):
+    dataset_id: str
+
+
+class ClockCompatibilityResponse(BaseModel):
+    dataset_id: str
+    dataset_summary: Dict[str, Any]
+    clocks: Dict[str, Any]
+
+
+class AIStatusResponse(BaseModel):
+    enabled: bool
+    configured: bool
+    model: str
+    status: str
+    message: str
+
+
+class AIInterpretRequest(BaseModel):
+    task_type: str = "explain_results"  # "explain_results", "summarize_experiment", "explain_biomarkers", "explain_pathways", "research_discussion", "limitations"
+    evidence: Dict[str, Any]
+    experiment_id: Optional[str] = None
+
+
+class AIInterpretResponse(BaseModel):
+    status: str
+    task_type: str
+    summary: str
+    observations: List[str] = []
+    hypotheses: List[str] = []
+    limitations: List[str] = []
+    evidence_sources: List[str] = []
+    disclaimer: str
+    model_used: Optional[str] = None
+    cached: bool = False
+    latency_ms: Optional[float] = None
+
+
+class BootstrapEvaluationRequest(BaseModel):
+    y_true: List[float]
+    y_pred: List[float]
+    metric_name: str = "mae"  # "mae", "rmse", "r2"
+    n_bootstraps: int = 1000
+    confidence_level: float = 0.95
+
+
+class AgeBiasEvaluationRequest(BaseModel):
+    chronological_age: List[float]
+    predicted_age: List[float]
+
+
+class ExternalValidationRequest(BaseModel):
+    experiment_id: str
+    external_dataset_id: str
+
+
+class DatasetShiftRequest(BaseModel):
+    train_dataset_id: str
+    external_dataset_id: str
+
+
+class ExperimentComparisonRequest(BaseModel):
+    experiment_id_a: str
+    experiment_id_b: str
+
+
+class AblationEvaluationRequest(BaseModel):
+    experiment_id: str
+    ablation_type: str = "modality"  # "modality", "fusion", "features", "gnn"
+

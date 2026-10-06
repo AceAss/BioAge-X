@@ -33,6 +33,7 @@ from bioage.integrations.geo_client import GEOClient
 from bioage.integrations.resolver import UnifiedIdentifierResolver
 from bioage.integrations.cache import get_integration_cache
 from bioage.integrations.provenance import get_provenance_tracker
+from bioage.ai.gemini_client import GeminiAssistantClient
 from bioage.utils.logger import get_logger
 
 logger = get_logger("apps.api.routers.integrations")
@@ -42,25 +43,43 @@ router = APIRouter(prefix="/integrations", tags=["External Biological Knowledge"
 @router.get("/health", response_model=IntegrationsHealthResponse)
 def get_integrations_health():
     """
-    Checks operational connectivity and versions for STRING, Reactome, Ensembl, and NCBI/GEO.
+    Checks operational connectivity and versions for STRING, Reactome, Ensembl, NCBI/GEO, and Gemini.
+    Distinguishes: AVAILABLE_NO_KEY, AVAILABLE_WITH_KEY, DEGRADED, UNAVAILABLE, AUTH_REQUIRED, DISABLED.
     Returns status without crashing or blocking startup if any provider is unavailable.
     """
     ensembl = EnsemblClient().check_health()
     string = STRINGClient().check_health()
     reactome = ReactomeClient().check_health()
     ncbi = NCBIClient().check_health()
+    gemini = GeminiAssistantClient(
+        api_key=settings.GEMINI_API_KEY,
+        model=settings.GEMINI_MODEL,
+        enabled=settings.GEMINI_ENABLED,
+    ).check_health()
     cache_stats = get_integration_cache().get_stats()
 
+    string_status = "AVAILABLE_NO_KEY" if string.status in ("available", "AVAILABLE_NO_KEY") else string.status.upper()
+    reactome_status = "AVAILABLE_NO_KEY" if reactome.status in ("available", "AVAILABLE_NO_KEY") else reactome.status.upper()
+    ensembl_status = "AVAILABLE_NO_KEY" if ensembl.status in ("available", "AVAILABLE_NO_KEY") else ensembl.status.upper()
+    ncbi_status = (
+        ("AVAILABLE_WITH_KEY" if settings.NCBI_API_KEY else "AVAILABLE_NO_KEY")
+        if ncbi.status in ("available", "AVAILABLE_NO_KEY", "AVAILABLE_WITH_KEY")
+        else ncbi.status.upper()
+    )
+    gemini_status = gemini.status.upper()
+
     return IntegrationsHealthResponse(
-        string=string.status,
-        reactome=reactome.status,
-        ensembl=ensembl.status,
-        ncbi=ncbi.status,
+        string=string_status,
+        reactome=reactome_status,
+        ensembl=ensembl_status,
+        ncbi=ncbi_status,
+        gemini=gemini_status,
         details={
             "ensembl": ensembl.to_dict(),
             "string": string.to_dict(),
             "reactome": reactome.to_dict(),
             "ncbi": ncbi.to_dict(),
+            "gemini": gemini.to_dict(),
         },
         cache=cache_stats,
     )

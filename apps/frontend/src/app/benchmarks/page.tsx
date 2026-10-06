@@ -58,6 +58,8 @@ export default function BenchmarksPage() {
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [strictCoverage, setStrictCoverage] = useState<boolean>(false);
+  const [compatibilityData, setCompatibilityData] = useState<any>(null);
+  const [compatibilityLoading, setCompatibilityLoading] = useState<boolean>(false);
 
   useEffect(() => {
     fetchDatasets();
@@ -71,10 +73,27 @@ export default function BenchmarksPage() {
         setDatasets(data);
         if (data.length > 0) {
           setSelectedDatasetId(data[0].id);
+          fetchCompatibility(data[0].id);
         }
       }
     } catch (e) {
       console.warn("Could not fetch datasets list:", e);
+    }
+  };
+
+  const fetchCompatibility = async (dsId: string) => {
+    if (!dsId) return;
+    setCompatibilityLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/benchmarks/compatibility/${encodeURIComponent(dsId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCompatibilityData(data);
+      }
+    } catch (e) {
+      console.warn("Could not fetch clock compatibility:", e);
+    } finally {
+      setCompatibilityLoading(false);
     }
   };
 
@@ -151,7 +170,10 @@ export default function BenchmarksPage() {
         <div className="flex items-center gap-3">
           <select
             value={selectedDatasetId}
-            onChange={(e) => setSelectedDatasetId(e.target.value)}
+            onChange={(e) => {
+              setSelectedDatasetId(e.target.value);
+              fetchCompatibility(e.target.value);
+            }}
             className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 focus:border-cyan-500 focus:outline-none"
           >
             {datasets.map((d) => (
@@ -253,6 +275,19 @@ export default function BenchmarksPage() {
           )}
         </div>
 
+        {/* Tissue Context & Awareness Warning Banner */}
+        <div className="mx-4 mb-3 p-3 rounded-lg border border-indigo-500/20 bg-indigo-950/20 text-[11px] text-indigo-300 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold text-indigo-200 uppercase tracking-wider block mb-0.5">
+              Tissue-Aware Benchmark Guidance
+            </span>
+            <span>
+              Reference clocks have specific tissue calibration scopes (e.g. <strong>Horvath</strong> = Pan-Tissue 51 cell types; <strong>Hannum</strong> = Whole Blood; <strong>PhenoAge</strong> = Whole Blood surrogate). Applying whole-blood clocks to solid or in vitro cell cultures introduces systematic calibration bias.
+            </span>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
@@ -352,45 +387,117 @@ export default function BenchmarksPage() {
         </div>
       </div>
 
-      {/* Reference Clocks Information Reference Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex items-center gap-2 mb-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
-            <BookOpen className="h-4 w-4" />
-            Horvath Pan-Tissue Clock (2013)
+      {/* Clock Compatibility Engine Inspector */}
+      {compatibilityData && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-md space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Scale className="w-4 h-4 text-cyan-400" />
+                Epigenetic Clock Compatibility &amp; Coverage Audit
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                Audits probe coverage against 1st, 2nd, and 3rd generation clocks without fabricating missing CpGs.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
+              {compatibilityData.dataset_summary?.evaluated_modality?.toUpperCase()} MODALITY
+            </span>
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            The landmark multi-tissue clock by Steve Horvath utilizing 353 CpG probes across Illumina 27K and 450K arrays. Incorporates an anti-log non-linear age transformation for infant and adult regimes.
-          </p>
-          <div className="mt-3 text-[10px] text-slate-500 border-t border-slate-800 pt-2 font-mono">
-            f(x) = log(x+1) - log(21) (x ≤ 20)
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 pt-2">
+            {Object.entries(compatibilityData.clocks || {}).map(([key, c]: [string, any]) => {
+              const statusColor =
+                c.status === "FULL_COVERAGE"
+                  ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-300"
+                  : c.status === "PARTIAL_COVERAGE"
+                  ? "border-amber-500/40 bg-amber-950/20 text-amber-300"
+                  : c.status === "NOT_APPLICABLE"
+                  ? "border-purple-500/40 bg-purple-950/20 text-purple-300"
+                  : "border-rose-500/40 bg-rose-950/20 text-rose-300";
+
+              return (
+                <div
+                  key={key}
+                  className={`p-3 rounded-lg border flex flex-col justify-between text-xs space-y-2 ${statusColor}`}
+                >
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400">{c.generation}</div>
+                    <div className="font-bold text-white text-xs">{c.clock_name}</div>
+                    <div className="font-mono text-[10px] mt-1">
+                      {c.available_count} / {c.required_count} ({c.coverage_pct}%)
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-slate-900/80">
+                      {c.status.replace("_", " ")}
+                    </span>
+                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-2" title={c.reason}>
+                      {c.reason}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+      )}
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex items-center gap-2 mb-2 text-teal-400 font-semibold text-xs uppercase tracking-wider">
-            <BookOpen className="h-4 w-4" />
-            Hannum Blood Clock (2013)
+      {/* Reference Clocks Information Reference Cards (1st, 2nd & 3rd Gen) */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-amber-400 font-semibold text-[11px] uppercase tracking-wider">
+            <BookOpen className="h-3.5 w-3.5" />
+            Horvath (2013)
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            Gregory Hannum&apos;s whole-blood clock trained on 71 CpG markers. Evaluates quantitative biological aging rates specifically in circulating leukocytes with strong correlation to mortality.
+          <span className="text-[9px] font-bold text-slate-500 uppercase">1st Gen Pan-Tissue</span>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            353 CpG probes across 51 human tissues and cell types. Anti-log transformation for pediatric calibration.
           </p>
-          <div className="mt-3 text-[10px] text-slate-500 border-t border-slate-800 pt-2 font-mono">
-            DNAmAge = 23.4 + Σ(w_i · Beta_i)
-          </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex items-center gap-2 mb-2 text-cyan-400 font-semibold text-xs uppercase tracking-wider">
-            <BookOpen className="h-4 w-4" />
-            Levine PhenoAge Clock (2018)
+        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-teal-400 font-semibold text-[11px] uppercase tracking-wider">
+            <BookOpen className="h-3.5 w-3.5" />
+            Hannum (2013)
           </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            Morgan Levine&apos;s second-generation clock trained on phenotypic age surrogates derived from 10 clinical blood chemistry biomarkers, mapped to 513 CpGs to capture multi-system morbidity.
+          <span className="text-[9px] font-bold text-slate-500 uppercase">1st Gen Whole Blood</span>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            71 CpG markers trained directly on circulating leukocyte DNAm; calibrated specifically for whole blood cohorts.
           </p>
-          <div className="mt-3 text-[10px] text-slate-500 border-t border-slate-800 pt-2 font-mono">
-            PhenoAge = 18.5 + Σ(c_i · Beta_i)
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-cyan-400 font-semibold text-[11px] uppercase tracking-wider">
+            <BookOpen className="h-3.5 w-3.5" />
+            PhenoAge (2018)
           </div>
+          <span className="text-[9px] font-bold text-slate-500 uppercase">2nd Gen Phenotypic</span>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            513 CpGs trained on composite clinical phenotypic mortality risk from 10 blood chemistry biomarkers.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-rose-400 font-semibold text-[11px] uppercase tracking-wider">
+            <BookOpen className="h-3.5 w-3.5" />
+            GrimAge (2019)
+          </div>
+          <span className="text-[9px] font-bold text-slate-500 uppercase">3rd Gen Surrogate</span>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            1,030 CpGs surrogate of 7 plasma proteins (GDF15, PAI-1, etc.) &amp; pack-years smoking; powerful mortality predictor.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3.5 space-y-2">
+          <div className="flex items-center gap-1.5 text-violet-400 font-semibold text-[11px] uppercase tracking-wider">
+            <BookOpen className="h-3.5 w-3.5" />
+            DunedinPACE (2022)
+          </div>
+          <span className="text-[9px] font-bold text-slate-500 uppercase">3rd Gen Longitudinal</span>
+          <p className="text-[10px] text-slate-400 leading-relaxed">
+            173 longitudinal pace-of-aging CpGs tracking multi-system physiological decline rate across repeated visits.
+          </p>
         </div>
       </div>
 

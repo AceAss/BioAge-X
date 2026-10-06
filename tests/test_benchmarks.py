@@ -100,3 +100,45 @@ def test_api_benchmark_endpoints():
     pub_data = pub_res.json()
     assert len(pub_data) >= 1
     assert pub_data[0]["key"] == "gse40279_hannum"
+
+
+def test_third_generation_clocks_and_compatibility_engine():
+    from bioage.benchmarks.clocks import GrimAgeClock, DunedinPACEClock, ClockCompatibilityEngine
+
+    grim = GrimAgeClock()
+    pace = DunedinPACEClock()
+    engine = ClockCompatibilityEngine()
+
+    df_sample = pd.DataFrame({
+        "chronological_age": [45, 60],
+        "cg16867657": [0.4, 0.6],
+        "cg06639320": [0.3, 0.5],
+    })
+
+    # Test GrimAge returns NOT_APPLICABLE without fabricating values
+    grim_res = grim.evaluate_on_dataset(df_sample)
+    assert grim_res.status == "NOT_APPLICABLE"
+    assert "NOT APPLICABLE TO CURRENT DATASET" in grim_res.notes
+    assert "surrogate" in grim_res.notes.lower()
+
+    # Test DunedinPACE returns NOT_APPLICABLE without fabricating values
+    pace_res = pace.evaluate_on_dataset(df_sample)
+    assert pace_res.status == "NOT_APPLICABLE"
+    assert "NOT APPLICABLE TO CURRENT DATASET" in pace_res.notes
+
+    # Test ClockCompatibilityEngine on methylation
+    compat_dnam = engine.assess_dataset(df_sample, detected_modality="methylation")
+    assert "GrimAge" in compat_dnam["clocks"]
+    assert "DunedinPACE" in compat_dnam["clocks"]
+    assert compat_dnam["clocks"]["GrimAge"]["status"] == "NOT_APPLICABLE"
+    assert compat_dnam["clocks"]["DunedinPACE"]["status"] == "NOT_APPLICABLE"
+
+    # Test ClockCompatibilityEngine on RNA-seq modality
+    df_rna = pd.DataFrame({
+        "GENE_TP53": [10.2, 12.1],
+        "GENE_CDKN2A": [5.1, 8.4],
+    })
+    compat_rna = engine.assess_dataset(df_rna, detected_modality="transcriptomics")
+    for clock_id, info in compat_rna["clocks"].items():
+        assert info["status"] == "NOT_APPLICABLE"
+        assert "modality" in info["reason"].lower()

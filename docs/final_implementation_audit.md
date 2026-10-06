@@ -1,4 +1,4 @@
-﻿# BioAge-X — Final Independent Implementation Audit
+# BioAge-X — Final Independent Implementation Audit
 
 **Audit Date**: October 2026
 **Auditor**: Independent Automated Verification Suite (Antigravity IDE)

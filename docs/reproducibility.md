@@ -26,3 +26,22 @@ Pipelines can be fully reproduced from external configuration files stored in `c
 - `configs/methylation_pipeline.yaml`
 - `configs/transcriptomics_pipeline.yaml`
 - `configs/model_benchmarks.yaml`
+
+## 4. Dataset Lineage & Acquisition Provenance
+
+Every dataset acquired through the Universal Data Acquisition layer receives a permanent `DatasetProvenanceRecord`:
+- Source repository name and accession identifier
+- Direct retrieval URL and timestamp (ISO 8601 UTC)
+- Cryptographic SHA-256 / MD5 checksum of downloaded archive or matrix
+- Original study citation and publication reference
+- Preprocessing history (orientation transposition, age unit harmonization, imputation)
+
+## 5. Automated Reproducibility Audit Script
+
+BioAge-X provides a dedicated automated reproducibility test suite:
+```bash
+python scripts/verify_reproducibility.py
+```
+This script executes two independent, end-to-end runs across preprocessing, feature selection, ElasticNet, RandomForest, SHAP explainability, biological network construction, and GNN training, asserting numerical equivalence:
+$$\max |\hat{y}^{(1)} - \hat{y}^{(2)}| < 1.0 \times 10^{-12}$$
+Ensuring bit-exact scientific determinism across computational environments.

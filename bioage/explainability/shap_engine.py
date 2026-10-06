@@ -41,41 +41,124 @@ class BioAgeShapExplainer:
         self.base_value_: float = 0.0
         self.X_explained_: Optional[pd.DataFrame] = None
         self.sample_ids_: List[str] = []
+        self.engine_used_: str = "none"
 
-    def explain(self, X: pd.DataFrame, sample_ids: Optional[List[str]] = None) -> "BioAgeShapExplainer":
-        """Calculates SHAP values for the cohort."""
+    def explain(
+        self,
+        X: pd.DataFrame,
+        sample_ids: Optional[List[str]] = None,
+        engine_mode: str = "auto",
+    ) -> "BioAgeShapExplainer":
+        """
+        Calculates SHAP values for the cohort.
+        engine_mode: 'auto' (prefer native tree/linear, fallback to analytical),
+                     'native' (require native shap),
+                     'analytical' (explicit mathematical decomposition).
+        """
         self.X_explained_ = X[self.feature_names].copy()
         self.sample_ids_ = sample_ids or [f"Sample_{i+1}" for i in range(len(X))]
         n_samples, n_features = self.X_explained_.shape
 
-        logger.info(f"Computing SHAP values for {n_samples} samples across {n_features} features")
+        logger.info(f"Computing SHAP values for {n_samples} samples across {n_features} features (mode={engine_mode})")
 
-        # Try official shap library first
         computed_with_shap = False
-        try:
-            import shap
-            # Extract underlying sklearn / xgboost model if present
-            raw_model = getattr(self.model, "model_", None)
-            if raw_model is not None and hasattr(shap, "TreeExplainer") and hasattr(raw_model, "estimators_"):
-                explainer = shap.TreeExplainer(raw_model)
-                shap_vals = explainer.shap_values(self.X_explained_.values)
-                self.shap_values_ = np.asarray(shap_vals)
-                self.base_value_ = float(explainer.expected_value)
-                computed_with_shap = True
-            elif raw_model is not None and hasattr(shap, "LinearExplainer") and hasattr(raw_model, "coef_"):
-                explainer = shap.LinearExplainer(raw_model, self.X_explained_.values)
-                shap_vals = explainer.shap_values(self.X_explained_.values)
-                self.shap_values_ = np.asarray(shap_vals)
-                self.base_value_ = float(explainer.expected_value)
-                computed_with_shap = True
-        except Exception as e:
-            logger.warning(f"Official shap engine threw exception ({e}), falling back to exact analytical decomposition.")
+        if engine_mode in ("auto", "native"):
+            try:
+                import shap
+                raw_model = getattr(self.model, "model_", None)
+                if raw_model is not None and hasattr(shap, "TreeExplainer") and (
+                    hasattr(raw_model, "estimators_") or hasattr(raw_model, "get_booster")
+                ):
+                    explainer = shap.TreeExplainer(raw_model)
+                    shap_vals = explainer.shap_values(self.X_explained_.values)
+                    self.shap_values_ = np.asarray(shap_vals)
+                    self.base_value_ = float(np.ravel(explainer.expected_value)[0])
+                    self.engine_used_ = "native_tree"
+                    computed_with_shap = True
+                elif raw_model is not None and hasattr(shap, "LinearExplainer") and hasattr(raw_model, "coef_"):
+                    explainer = shap.LinearExplainer(raw_model, self.X_explained_.values)
+                    shap_vals = explainer.shap_values(self.X_explained_.values)
+                    self.shap_values_ = np.asarray(shap_vals)
+                    self.base_value_ = float(np.ravel(explainer.expected_value)[0])
+                    self.engine_used_ = "native_linear"
+                    computed_with_shap = True
+            except Exception as e:
+                logger.warning(f"Native SHAP computation raised ({e}); falling back to exact analytical decomposition.")
+                if engine_mode == "native":
+                    raise
 
         if not computed_with_shap:
             # Analytical Linear / Tree attribution fallback
             self._compute_analytical_shap()
+            self.engine_used_ = "analytical"
 
         return self
+
+    def compare_native_vs_analytical(self, X: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Comparative benchmark evaluating both native SHAP and analytical fallback
+        on the exact same dataset. Verifies efficiency (sum(phi) + base ≈ prediction)
+        and computes rank and value correlation across all features.
+        """
+        # 1. Native execution
+        native_shap = None
+        native_base = 0.0
+        native_error = None
+        try:
+            self.explain(X, engine_mode="native")
+            native_shap = self.shap_values_.copy()
+            native_base = self.base_value_
+            native_engine = self.engine_used_
+        except Exception as e:
+            native_error = str(e)
+            native_engine = "unavailable"
+
+        # 2. Analytical execution
+        self.explain(X, engine_mode="analytical")
+        analyt_shap = self.shap_values_.copy()
+        analyt_base = self.base_value_
+
+        preds = self.model.predict(X[self.feature_names])
+
+        # Verify efficiency for analytical
+        analyt_sums = np.sum(analyt_shap, axis=1) + analyt_base
+        max_diff_analyt = float(np.max(np.abs(analyt_sums - preds)))
+
+        # Verify efficiency for native
+        max_diff_native = None
+        correlation = None
+        if native_shap is not None:
+            native_sums = np.sum(native_shap, axis=1) + native_base
+            max_diff_native = float(np.max(np.abs(native_sums - preds)))
+            # Compute correlation between mean absolute SHAP importances
+            mean_native = np.mean(np.abs(native_shap), axis=0)
+            mean_analyt = np.mean(np.abs(analyt_shap), axis=0)
+            if np.std(mean_native) > 1e-9 and np.std(mean_analyt) > 1e-9:
+                correlation = float(np.corrcoef(mean_native, mean_analyt)[0, 1])
+            else:
+                correlation = 1.0
+
+        # Restore native as default if available
+        if native_shap is not None:
+            self.shap_values_ = native_shap
+            self.base_value_ = native_base
+            self.engine_used_ = native_engine
+        else:
+            self.shap_values_ = analyt_shap
+            self.base_value_ = analyt_base
+            self.engine_used_ = "analytical"
+
+        return {
+            "native_available": native_shap is not None,
+            "native_engine": native_engine,
+            "max_efficiency_diff_analytical": max_diff_analyt,
+            "max_efficiency_diff_native": max_diff_native,
+            "mean_importance_correlation": correlation,
+            "efficiency_verified": (
+                max_diff_analyt < 1e-2 and (max_diff_native is None or max_diff_native < 1e-2)
+            ),
+            "native_error": native_error,
+        }
 
     def _compute_analytical_shap(self) -> None:
         """Exact Shapley value computation for linear models and normalized tree attribution."""

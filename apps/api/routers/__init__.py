@@ -11,6 +11,10 @@ from apps.api.routers.experiments import router as experiments_router
 from apps.api.routers.health import router as health_router
 from apps.api.routers.benchmarks import router as benchmarks_router
 from apps.api.routers.integrations import router as integrations_router
+from apps.api.routers.data_sources import router as data_sources_router
+from apps.api.routers.downloads import router as downloads_router
+from apps.api.routers.ai import router as ai_router
+from apps.api.routers.evaluation import router as evaluation_router
 
 __all__ = [
     "datasets_router",
@@ -25,5 +29,8 @@ __all__ = [
     "experiments_router",
     "health_router",
     "integrations_router",
+    "data_sources_router",
+    "downloads_router",
+    "ai_router",
+    "evaluation_router",
 ]
-

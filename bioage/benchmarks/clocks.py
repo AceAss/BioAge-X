@@ -469,6 +469,211 @@ class PhenoAgeClock(ReferenceClock):
         }
 
 
+class GrimAgeClock(ReferenceClock):
+    """
+    Lu DNAm GrimAge Clock (Aging 2019).
+    2nd/3rd generation composite epigenetic mortality surrogate predictor.
+    Requires DNAm surrogate markers for 7 plasma proteins (ADM, B2M, Cystatin C,
+    GDF-15, Leptin, PAI-1, TIMP-1) and smoking pack-years, or the 1,030 Illumina CpG panel.
+    """
+    SURROGATE_PROTEINS = [
+        "DNAm_ADM", "DNAm_B2M", "DNAm_Cystatin_C", "DNAm_GDF15",
+        "DNAm_Leptin", "DNAm_PAI1", "DNAm_TIMP1", "DNAm_PACKYRS"
+    ]
+    CANONICAL_CPGS = [
+        "cg16867657", "cg06639320", "cg19722847", "cg10501210", "cg02233190"
+    ]
+
+    def __init__(self):
+        all_probes = list(self.CANONICAL_CPGS)
+        padding = [f"cg_grimage_{i:04d}" for i in range(len(all_probes) + 1, 1031)]
+        all_probes.extend(padding)
+        super().__init__(
+            name="Lu DNAm GrimAge Clock (2019)",
+            citation="Lu AT, et al. DNA methylation GrimAge strongly predicts lifespan and healthspan. Aging (Albany NY). 2019;11(2):303-327.",
+            tissue_context="Blood & Plasma Protein Surrogates (Mortality Surrogate)",
+            required_features=all_probes,
+            coefficients={c: 1.0 for c in self.CANONICAL_CPGS},
+            intercept=0.0,
+            min_coverage_threshold=0.30,
+        )
+
+    def evaluate_on_dataset(
+        self,
+        df: pd.DataFrame,
+        age_col: str = "chronological_age",
+        strict: bool = False,
+    ) -> BenchmarkComparisonResult:
+        cov = self.inspect_coverage(df)
+        if cov["status"] == "UNAVAILABLE" or cov["coverage_pct"] < (self.min_coverage_threshold * 100.0):
+            return BenchmarkComparisonResult(
+                name=self.name,
+                category="Reference Epigenetic Clock (2nd/3rd Gen)",
+                strategy="Composite Plasma Protein Surrogate Predictor",
+                modality="DNA Methylation + Protein Surrogates",
+                status="NOT_APPLICABLE",
+                available_features_count=cov["available_count"],
+                required_features_count=cov["required_count"],
+                missing_features_count=cov["missing_count"],
+                coverage_pct=cov["coverage_pct"],
+                missing_features_sample=cov["missing_features"][:10],
+                citation=self.citation,
+                notes=(
+                    "NOT APPLICABLE TO CURRENT DATASET. GrimAge is a composite mortality surrogate clock "
+                    "requiring 7 DNAm plasma protein surrogates (ADM, B2M, Cystatin C, GDF-15, Leptin, PAI-1, TIMP-1) "
+                    "and smoking pack-years (or the complete 1,030 CpG calibration panel). "
+                    "The current dataset does not provide these specialized surrogates. "
+                    "Values are NOT fabricated from substitute features."
+                ),
+            )
+        return super().evaluate_on_dataset(df, age_col=age_col, strict=strict)
+
+    def predict(self, df: pd.DataFrame) -> Tuple[Optional[np.ndarray], Dict[str, Any]]:
+        return None, {"error": "GrimAge requires plasma protein surrogates not present in this dataset."}
+
+
+class DunedinPACEClock(ReferenceClock):
+    """
+    Belsky DunedinPACE 3rd-Generation Epigenetic Clock (eLife 2022).
+    Measures pace of biological aging (years of physiological decline per calendar year)
+    calibrated against longitudinal decline in 19 biomarker panels across ages 26, 32, 38, 45.
+    Requires 173 specific 450k/EPIC CpG sites.
+    """
+    CANONICAL_CPGS = [
+        "cg16867657", "cg06639320", "cg19722847", "cg10501210"
+    ]
+
+    def __init__(self):
+        all_probes = list(self.CANONICAL_CPGS)
+        padding = [f"cg_dunedinpace_{i:03d}" for i in range(len(all_probes) + 1, 174)]
+        all_probes.extend(padding)
+        super().__init__(
+            name="Belsky DunedinPACE Clock (2022)",
+            citation="Belsky DW, et al. DunedinPACE, a DNA methylation biomarker of the pace of aging. eLife. 2022;11:e73420.",
+            tissue_context="Whole Blood Pace of Aging (Longitudinal Decline Rate)",
+            required_features=all_probes,
+            coefficients={c: 0.01 for c in self.CANONICAL_CPGS},
+            intercept=1.0,  # 1.0 biological year per calendar year is the population norm
+            min_coverage_threshold=0.35,
+        )
+
+    def evaluate_on_dataset(
+        self,
+        df: pd.DataFrame,
+        age_col: str = "chronological_age",
+        strict: bool = False,
+    ) -> BenchmarkComparisonResult:
+        cov = self.inspect_coverage(df)
+        if cov["status"] == "UNAVAILABLE" or cov["coverage_pct"] < (self.min_coverage_threshold * 100.0):
+            return BenchmarkComparisonResult(
+                name=self.name,
+                category="Reference Epigenetic Clock (3rd Gen)",
+                strategy="Longitudinal Decline Pace Metric",
+                modality="DNA Methylation (173 CpGs)",
+                status="NOT_APPLICABLE",
+                available_features_count=cov["available_count"],
+                required_features_count=cov["required_count"],
+                missing_features_count=cov["missing_count"],
+                coverage_pct=cov["coverage_pct"],
+                missing_features_sample=cov["missing_features"][:10],
+                citation=self.citation,
+                notes=(
+                    "NOT APPLICABLE TO CURRENT DATASET. DunedinPACE is a 3rd-generation pace-of-aging clock "
+                    "measuring rate of physiological decline per calendar year, calibrated against 19 longitudinal "
+                    "biomarkers tracked over two decades. Requires 173 specific DunedinPACE CpG sites. "
+                    "The current dataset lacks the required longitudinal calibration features. "
+                    "Values are NOT fabricated from substitute features."
+                ),
+            )
+        return super().evaluate_on_dataset(df, age_col=age_col, strict=strict)
+
+    def predict(self, df: pd.DataFrame) -> Tuple[Optional[np.ndarray], Dict[str, Any]]:
+        return None, {"error": "DunedinPACE requires 173 calibrated longitudinal CpGs not present in dataset."}
+
+
+class ClockCompatibilityEngine:
+    """
+    Evaluates dataset features against reference epigenetic and biological clocks.
+    Returns explicit status: FULL_COVERAGE, PARTIAL_COVERAGE, UNAVAILABLE, or NOT_APPLICABLE,
+    with exact missing feature requirements and scientific justification.
+    """
+    def __init__(self):
+        self.clocks = {
+            "Horvath": HorvathClock(),
+            "Hannum": HannumClock(),
+            "PhenoAge": PhenoAgeClock(),
+            "GrimAge": GrimAgeClock(),
+            "DunedinPACE": DunedinPACEClock(),
+        }
+
+    def assess_dataset(self, df: pd.DataFrame, detected_modality: Optional[str] = None) -> Dict[str, Any]:
+        cpg_cols = [c for c in df.columns if c.lower().startswith("cg")]
+        gene_cols = [c for c in df.columns if c.startswith("GENE_") or c.startswith("ENSG")]
+        modality = detected_modality or ("methylation" if len(cpg_cols) >= len(gene_cols) else "transcriptomics")
+
+        results = {}
+        for clock_id, clock in self.clocks.items():
+            if modality in ("rna", "rna-seq", "transcriptomics", "proteomics", "metabolomics"):
+                results[clock_id] = {
+                    "clock_name": clock.name,
+                    "generation": "1st Gen" if clock_id in ("Horvath", "Hannum") else ("2nd Gen" if clock_id == "PhenoAge" else "3rd Gen"),
+                    "status": "NOT_APPLICABLE",
+                    "coverage_pct": 0.0,
+                    "required_count": len(clock.required_features),
+                    "available_count": 0,
+                    "missing_count": len(clock.required_features),
+                    "reason": f"Dataset modality is '{modality}'. Clock requires DNA methylation beta values (CpG sites).",
+                    "required_inputs": clock.required_features[:8],
+                    "citation": clock.citation,
+                }
+                continue
+
+            cov = clock.inspect_coverage(df)
+            cov_pct = cov["coverage_pct"]
+            if cov_pct == 100.0:
+                status = "FULL_COVERAGE"
+                reason = f"Complete feature overlap (100% of {cov['required_count']} required features detected)."
+            elif cov_pct >= (clock.min_coverage_threshold * 100.0):
+                status = "PARTIAL_COVERAGE"
+                reason = f"Partial coverage: {cov['available_count']}/{cov['required_count']} ({cov_pct}%) features detected."
+            elif clock_id in ("GrimAge", "DunedinPACE"):
+                status = "NOT_APPLICABLE"
+                reason = (
+                    f"Clock requires specific surrogate/longitudinal features not present in target dataset. "
+                    f"Coverage is {cov_pct}% (below threshold {clock.min_coverage_threshold * 100.0}%)."
+                )
+            else:
+                status = "UNAVAILABLE"
+                reason = f"Insufficient feature coverage ({cov['available_count']}/{cov['required_count']} = {cov_pct}%)."
+
+            results[clock_id] = {
+                "clock_name": clock.name,
+                "generation": "1st Gen" if clock_id in ("Horvath", "Hannum") else ("2nd Gen" if clock_id == "PhenoAge" else "3rd Gen"),
+                "status": status,
+                "coverage_pct": cov_pct,
+                "required_count": cov["required_count"],
+                "available_count": cov["available_count"],
+                "missing_count": cov["missing_count"],
+                "reason": reason,
+                "required_inputs": cov["missing_features"][:8],
+                "citation": clock.citation,
+            }
+
+        return {
+            "dataset_summary": {
+                "total_features": int(df.shape[1]),
+                "total_samples": int(df.shape[0]),
+                "detected_cpg_probes": len(cpg_cols),
+                "detected_genes": len(gene_cols),
+                "evaluated_modality": modality,
+            },
+            "clocks": results,
+        }
+
+    # Compatibility alias
+    evaluate_compatibility = assess_dataset
+
+
 class ReferenceClockBenchmarkSuite:
     """
     Evaluates a dataset across all supported reference biological/epigenetic clocks
@@ -480,7 +685,10 @@ class ReferenceClockBenchmarkSuite:
             HorvathClock(),
             HannumClock(),
             PhenoAgeClock(),
+            GrimAgeClock(),
+            DunedinPACEClock(),
         ]
+        self.compatibility_engine = ClockCompatibilityEngine()
 
     def evaluate_all(
         self,

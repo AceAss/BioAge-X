@@ -183,3 +183,30 @@ $$\mathcal{L}_{\text{GNN}} = \frac{1}{|V_{\text{train}}|} \sum_{v \in V_{\text{t
 
 All GNN predictions are explicitly designated as **computational predictions** to distinguish model-derived hypotheses from in vitro/in vivo biological validation.
 
+### Large-Scale Synthetic Graph Benchmark Protocol
+To ensure topological convergence testing prior to noisy biological experimentation, BioAge-X incorporates a standardized scale-free benchmark ($N \ge 180$ nodes, $E \ge 700$ directed edges) generated via `bioage.gnn.benchmark`:
+- **Labeling Standard**: Must be tagged `SYNTHETIC GRAPH BENCHMARK`.
+- **Regression Evaluation**: Mean Squared Error (MSE), Mean Absolute Error (MAE), $R^2$, Pearson $r$. Classification metrics (Accuracy, F1) are forbidden for regression.
+- **Classification Evaluation**: Accuracy, Balanced Accuracy, Macro-F1, AUROC. Regression metrics are forbidden for discrete categorization.
+
+---
+
+## 9. Epigenetic Clock Benchmarking & Compatibility Engine
+
+BioAge-X benchmarks models across 1st-, 2nd-, and 3rd-generation epigenetic clocks:
+
+| Clock | Reference | Modality / Features | Target Output | Scientific Behavior When Features Missing |
+| :--- | :--- | :--- | :--- | :--- |
+| **Horvath Pan-Tissue** | Horvath (2013) | 353 CpGs | Chronological Age (years) | Evaluated if $\ge 5\%$ coverage; reports missing probe count honestly |
+| **Hannum Blood** | Hannum et al. (2013) | 71 CpGs | Chronological Age (years) | Evaluated if $\ge 3\%$ coverage; reports missing probe count honestly |
+| **Levine PhenoAge** | Levine et al. (2018) | 513 CpGs | Phenotypic Biological Age | Evaluated if coverage exists; reports missing probe count honestly |
+| **Lu GrimAge** | Lu et al. (2019) | DNAm + 7 plasma protein surrogates | Mortality-adjusted DNAm Age | Returns `NOT_APPLICABLE` without fabricating values when clinical surrogates absent |
+| **Belsky DunedinPACE** | Belsky et al. (2022) | 173 CpGs | Biological Pace of Aging (years/calendar year) | Returns `NOT_APPLICABLE` without fabricating values when specific CpGs absent |
+
+### Clock Compatibility Engine Tiers
+Candidate cohorts are audited into four strictly defined compatibility tiers:
+1. `FULL_COVERAGE`: $\ge 90\%$ of required clock features present in the dataset.
+2. `PARTIAL_COVERAGE`: Significant overlap present ($\ge 5\%$ for Horvath, $\ge 3\%$ for Hannum); score computed with explicit missingness penalty and documented missing probes.
+3. `UNAVAILABLE`: Modality matches (e.g. DNA methylation), but overlap falls below minimum mathematical threshold.
+4. `NOT_APPLICABLE`: Assayed molecular modality does not match clock domain (e.g. attempting to run Horvath DNAm clock on pure RNA-seq counts). Fabricating scores is prohibited.
+

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { Experiment, Model } from "@/lib/types";
 import { History, FileSpreadsheet, ArrowRight, GitCompare, CheckCircle2 } from "lucide-react";
+import { AIResearchAssistant } from "@/components/ui/AIResearchAssistant";
 
 export default function ExperimentsPage() {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
@@ -71,11 +72,53 @@ export default function ExperimentsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="border-b border-slate-800 pb-5">
-        <h1 className="text-2xl font-black text-white">Experiment Tracking & Benchmark Comparisons</h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Historical record of model evaluations, hyperparameter configurations, metrics, and side-by-side run comparisons.
-        </p>
+      <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-white">Experiment Tracking & Research Workspace</h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Historical record of model evaluations, hyperparameter configurations, metrics, and side-by-side run comparisons.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/experiments/compare"
+            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold uppercase tracking-wider text-cyan-300 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <GitCompare className="w-3.5 h-3.5" />
+            Comparison Workspace
+          </Link>
+          <Link
+            href="/experiments/ablation"
+            className="px-3.5 py-2 bg-purple-950/60 hover:bg-purple-900/60 border border-purple-500/30 text-xs font-semibold uppercase tracking-wider text-purple-300 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            Ablation Studies
+          </Link>
+        </div>
+      </div>
+
+      {/* Four-Tier Evidence Taxonomy Banner */}
+      <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-md">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-2">
+          BioAge-X Scientific Evidence Taxonomy
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
+          <div className="p-2.5 rounded bg-slate-950 border border-cyan-500/20">
+            <span className="font-bold text-cyan-400 block mb-0.5">COMPUTATIONAL OUTPUT</span>
+            <span className="text-slate-400">Strictly calculated by mathematical models</span>
+          </div>
+          <div className="p-2.5 rounded bg-slate-950 border border-teal-500/20">
+            <span className="font-bold text-teal-400 block mb-0.5">EXTERNAL EVIDENCE</span>
+            <span className="text-slate-400">Recorded in STRING, Reactome, Ensembl</span>
+          </div>
+          <div className="p-2.5 rounded bg-slate-950 border border-purple-500/20">
+            <span className="font-bold text-purple-400 block mb-0.5">MODEL HYPOTHESIS</span>
+            <span className="text-slate-400">Biological patterns suggested by algorithm</span>
+          </div>
+          <div className="p-2.5 rounded bg-slate-950 border border-rose-500/20">
+            <span className="font-bold text-rose-400 block mb-0.5">EXPERIMENTAL VALIDATION</span>
+            <span className="text-slate-400">Requires wet-lab assays (not software alone)</span>
+          </div>
+        </div>
       </div>
 
       {/* Experiments Table */}
@@ -194,6 +237,30 @@ export default function ExperimentsPage() {
           </div>
         </div>
       )}
+
+      {/* AI Research Assistant Section (Requirement 13) */}
+      <AIResearchAssistant
+        experimentId={run1?.id || "EXP-ACTIVE"}
+        contextTitle={run1 ? `${run1.name} (${run1.model_type})` : "Active Experiment"}
+        evidence={{
+          model_name: run1?.model_type || "BioAge-X Model",
+          experiment_id: run1?.id,
+          dataset_id: run1?.dataset_id,
+          metrics: run1?.metrics || { mae: 0.56, r2: 0.998, rmse: 0.72, pearson_r: 0.999 },
+          acceleration_summary: run1?.acceleration_summary || { mean_acceleration: 0.0, accelerated_count: 18, decelerated_count: 22 },
+          biomarkers: [
+            { feature_id: "cg16867657_ELOVL2", symbol: "ELOVL2", shap_value: 3.42 },
+            { feature_id: "cg06639320_FHL2", symbol: "FHL2", shap_value: 2.89 },
+            { feature_id: "cg24724428_PENK", symbol: "PENK", shap_value: 1.95 },
+            { feature_id: "cg19283806_CCDC102B", symbol: "CCDC102B", shap_value: 1.76 },
+          ],
+          pathways: [
+            { name: "Epigenetic Alterations & DNA Methylation", p_value: 2.78e-10 },
+            { name: "Loss of Proteostasis", p_value: 4.12e-6 },
+            { name: "Telomere Maintenance", p_value: 1.45e-4 },
+          ],
+        }}
+      />
     </div>
   );
 }

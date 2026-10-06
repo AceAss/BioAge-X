@@ -60,3 +60,66 @@ def train_gnn(request: GNNTrainRequest):
         top_predicted_nodes=eval_results["top_predicted_nodes"],
         disclaimer=GNN_SCIENTIFIC_DISCLAIMER,
     )
+
+
+@router.get("/benchmark")
+def run_gnn_benchmark(
+    task: str = "regression",
+    architecture: str = "GCN",
+    epochs: int = 40,
+    lr: float = 0.01,
+):
+    """
+    Executes a reproducible benchmark on the 180+ node synthetic interactome.
+    Explicitly labeled SYNTHETIC GRAPH BENCHMARK with task-aware metrics.
+    """
+    from bioage.gnn.benchmark import create_large_graph_benchmark, train_and_evaluate_benchmark
+
+    if task not in ("regression", "classification"):
+        raise HTTPException(status_code=400, detail="task must be either 'regression' or 'classification'.")
+    if architecture not in ("GCN", "GraphSAGE", "GAT"):
+        raise HTTPException(status_code=400, detail=f"Unsupported architecture '{architecture}'.")
+
+    dataset = create_large_graph_benchmark(n_nodes=180, task_type=task, seed=42)
+    results = train_and_evaluate_benchmark(
+        dataset=dataset,
+        architecture=architecture,
+        epochs=epochs,
+        lr=lr,
+        task_type=task,
+        seed=42,
+    )
+    return results
+
+
+@router.post("/signals-graph")
+def create_graph_from_phase1_signals(
+    payload: dict,
+):
+    """
+    Constructs a topological GNN dataset directly from Phase 1 candidate biomarkers
+    and SHAP feature attribution weights.
+    """
+    from bioage.gnn.benchmark import build_gnn_from_phase1_signals
+
+    candidates = payload.get("candidate_biomarkers", [])
+    if not candidates:
+        raise HTTPException(status_code=400, detail="candidate_biomarkers list required.")
+
+    edge_file = settings.EXAMPLE_DIR / "aging_network_edges.csv"
+    edge_path = str(edge_file) if edge_file.exists() else None
+
+    dataset = build_gnn_from_phase1_signals(
+        candidate_biomarkers=candidates,
+        edge_list_path=edge_path,
+    )
+    return {
+        "status": "success",
+        "benchmark_label": getattr(dataset, "benchmark_type", "BIOLOGICAL PRIOR GRAPH"),
+        "nodes_count": dataset.num_nodes,
+        "edges_count": dataset.num_edges // 2,
+        "feature_dim": dataset.x.size(1),
+        "node_ids": dataset.node_ids[:20],
+        "feature_names": dataset.feature_names,
+    }
+

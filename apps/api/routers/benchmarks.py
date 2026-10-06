@@ -13,7 +13,15 @@ import pandas as pd
 
 from apps.api.core.database import get_db
 from apps.api.models.db_models import DatasetRecord
-from bioage.benchmarks.clocks import ReferenceClockBenchmarkSuite, HorvathClock, HannumClock, PhenoAgeClock
+from bioage.benchmarks.clocks import (
+    ReferenceClockBenchmarkSuite,
+    HorvathClock,
+    HannumClock,
+    PhenoAgeClock,
+    GrimAgeClock,
+    DunedinPACEClock,
+    ClockCompatibilityEngine,
+)
 from bioage.benchmarks.multi_omics_evaluator import MultiOmicsBenchmarkComparator
 from bioage.utils.logger import get_logger
 
@@ -134,3 +142,43 @@ def run_benchmark(request: BenchmarkRunRequest, db: Session = Depends(get_db)):
         scientific_synthesis=report["scientific_synthesis"],
         results=report["results"],
     )
+
+
+class ClockCompatibilityRequest(BaseModel):
+    dataset_id: str
+
+
+@router.post("/compatibility")
+def evaluate_clock_compatibility(request: ClockCompatibilityRequest, db: Session = Depends(get_db)):
+    """
+    Evaluates compatibility across all reference clocks (Horvath, Hannum, PhenoAge,
+    GrimAge, DunedinPACE) for a given dataset, returning feature coverage breakdown
+    and coverage tiers (FULL_COVERAGE, PARTIAL_COVERAGE, UNAVAILABLE, NOT_APPLICABLE).
+    """
+    dataset = db.query(DatasetRecord).filter(DatasetRecord.id == request.dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    file_path = Path(dataset.file_path)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Dataset file not found on disk")
+
+    try:
+        df = pd.read_csv(file_path, index_col=0)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read dataset: {str(e)}")
+
+    engine = ClockCompatibilityEngine()
+    compatibility = engine.evaluate_compatibility(df)
+    return {
+        "dataset_id": dataset.id,
+        "dataset_name": dataset.name,
+        **compatibility,
+    }
+
+
+@router.get("/compatibility/{dataset_id}")
+def get_clock_compatibility(dataset_id: str, db: Session = Depends(get_db)):
+    """Convenience GET endpoint for evaluating clock compatibility on a dataset."""
+    return evaluate_clock_compatibility(ClockCompatibilityRequest(dataset_id=dataset_id), db=db)
+

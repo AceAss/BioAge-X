@@ -7,16 +7,18 @@ BioAge-X is organized as a modular computational biology and machine-learning mo
 ```
 BioAge-X/
 ├── apps/
-│   ├── api/             # FastAPI REST service, SQLAlchemy ORM, job execution
-│   └── frontend/        # Next.js 14, Tailwind CSS, Cytoscape.js, interactive visualizers
+│   ├── api/             # FastAPI REST service, lifespan management, job execution
+│   └── frontend/        # Next.js 14, Tailwind CSS, Cytoscape.js, Dataset Explorer UI
 ├── bioage/
+│   ├── acquisition/     # Universal Data Acquisition: 12 repository connectors, resolver, downloader, extractor, validator, normalizer
+│   ├── benchmarks/      # Reference clock suite (Horvath, Hannum, PhenoAge, GrimAge, DunedinPACE) & compatibility engine
 │   ├── ingestion/       # Format loaders (CSV, TSV, Parquet, H5AD), DatasetProfiler
 │   ├── preprocessing/   # Modality pipelines (methylation, transcriptomics, feature selection)
 │   ├── models/          # BaseBioAgeModel, ElasticNet, RandomForest, XGBoost, Multi-Omics Fusion
 │   ├── evaluation/      # Metrics (MAE, RMSE, R2, Pearson, Spearman) & Age Acceleration
-│   ├── explainability/  # SHAP explainer (beeswarm, waterfall, global attribution)
+│   ├── explainability/  # Native & analytical SHAP explainer (beeswarm, waterfall, global attribution)
 │   ├── network/         # Heterogeneous biological interaction graphs & NetworkX centrality
-│   ├── gnn/             # PyTorch / PyG graph learning (GCN, GraphSAGE, GAT)
+│   ├── gnn/             # PyTorch / PyG graph learning (GCN, GraphSAGE, GAT), synthetic 180+ node benchmarks
 │   ├── pathways/        # Hypergeometric over-representation analysis against aging hallmarks
 │   ├── reporting/       # ResearchReportGenerator & PDF exporter (ReportLab)
 │   └── utils/           # Synthetic cohort generator, logging, serialization
@@ -33,6 +35,14 @@ BioAge-X/
 ```
 
 ## System Component Responsibilities
+
+0. **Universal Data Acquisition (`bioage.acquisition`)**:
+   - Manages 12 biological repository connectors (GEO, SRA, ENA, ArrayExpress, BioStudies, GDC, TCGA, PRIDE, ProteomeXchange, MetaboLights, GenericURL, Manifest).
+   - Routes queries and URLs dynamically via `UniversalAccessionResolver`.
+   - Executes streaming downloads with HTTP range resume, SHA-256 validation, and preflight disk checks.
+   - Enforces archive security (`SafeExtractor`) against ZipSlip and decompression bombs.
+   - Standardizes matrix orientation and harmonizes age variables (`DatasetValidator` & `DatasetNormalizer`).
+   - Supports declarative multi-omics manifests with sample intersection and modality union merging.
 
 1. **Ingestion & Profiler (`bioage.ingestion`)**:
    - Detects orientation (`samples_by_features` vs `features_by_samples`).

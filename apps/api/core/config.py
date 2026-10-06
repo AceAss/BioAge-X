@@ -4,8 +4,8 @@ Uses Pydantic Settings for environment variables and paths.
 """
 
 from pathlib import Path
-from typing import List
-from pydantic_settings import BaseSettings
+from typing import List, Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     PROCESSED_DIR: Path = PROJECT_ROOT / "data" / "processed"
     EXAMPLE_DIR: Path = PROJECT_ROOT / "data" / "example"
 
+    # External Integrations (Optional Credentials)
+    NCBI_API_KEY: Optional[str] = None
+
+    # AI Research Assistant (Optional Google Gemini Integration)
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-3.8-flash"
+    GEMINI_ENABLED: bool = False
+
     # CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
@@ -32,9 +40,7 @@ class Settings(BaseSettings):
         "*",
     ]
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()
