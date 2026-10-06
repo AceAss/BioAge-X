@@ -122,9 +122,10 @@ modalities:
     setLoadingSources(true);
     try {
       const data = await api.getDataSources();
-      setSources(data);
+      setSources(Array.isArray(data) ? data : []);
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load capabilities:", e);
+      setSources([]);
     } finally {
       setLoadingSources(false);
     }
@@ -565,7 +566,7 @@ modalities:
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {sources.map((src) => (
+                  {(sources || []).map((src) => (
                     <tr key={src.repository} className="hover:bg-slate-800/30">
                       <td className="px-4 py-3 font-semibold text-white">{src.repository}</td>
                       <td className="px-4 py-3 text-slate-400">{src.category}</td>

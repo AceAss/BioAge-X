@@ -399,8 +399,10 @@ export const api = {
   // --- Universal Biological Data Acquisition ---
   async getDataSources(): Promise<DataSourceSummary[]> {
     try {
-      const res = await fetchJson<{ data_sources: DataSourceSummary[] }>("/data-sources");
-      return res.data_sources;
+      const res = await fetchJson<any>("/data-sources");
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.data_sources)) return res.data_sources;
+      return [];
     } catch {
       return [];
     }
